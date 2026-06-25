@@ -1,0 +1,22 @@
+/*
+ * Styles for the RevealSoundSettings menu form (scripts/reveal-sound-settings.js).
+ *
+ * Scoped under the module id class on the AppV2 root element. CSS class identifiers
+ * can't legally begin with a digit, so the `[class~=...]` attribute form is used
+ * instead of an escaped class selector — same specificity, no escapes.
+ */
+[class~="epic-3d-card-reveal"].reveal-sound-settings {
+    /*
+     * Shared form styling (tokens, inputs, hints, footer) comes from base.css via the
+     * `.application` scope; this file only stretches the hand-built volume slider and the
+     * channel select so they line up with the file-picker field above them.
+     */
+    .form-group {
+        align-items: center;
+
+        range-picker,
+        select {
+            flex: 2;
+        }
+    }
+}

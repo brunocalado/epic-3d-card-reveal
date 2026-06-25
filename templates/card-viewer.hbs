@@ -1,0 +1,47 @@
+{{!--
+    Rendered by CardViewerApp (HandlebarsApplicationMixin + ApplicationV2).
+    The outer scope class is provided by DEFAULT_OPTIONS.classes on the root element;
+    this template renders only inner content. CSS custom properties hang on the stage div
+    because they need to read the per-instance glow value (which also frames the card).
+--}}
+<div class="cv-stage"
+     style="--rgb-card-glint--edge: {{#if glintColor}}{{glintColor}}{{else}}transparent{{/if}}; --cv-card-glow: {{glowShadow}};">
+
+    {{!-- Full-screen clickable backdrop, behind the card area. Clicking here closes the viewer. --}}
+    <div class="cv-backdrop" data-action="close"></div>
+
+    <button type="button" class="cv-close-btn" data-action="close" data-tooltip="Dismiss">
+        <i class="fas fa-xmark"></i>
+    </button>
+
+    <div class="cv-dismiss-hint">Click the card to flip it &mdash; click anywhere else to dismiss{{#if hasMultiple}} &mdash; right-click a card to enlarge it{{/if}}</div>
+
+    {{#if showShareBtn}}
+    <button type="button" class="cv-share-btn" data-action="share" data-tooltip="Show to Players">
+        <i class="fas fa-eye"></i>
+    </button>
+    {{/if}}
+
+    <div class="cv-safe-viewing-area">
+        <div class="cv-cards-display">
+            <div class="cv-card-animation-container">
+                {{#each images as |image|}}
+                <div class="cv-arc-container">
+                    <div class="cv-perspective-container">
+                        <div class="cv-flip-container {{#if (or ../faceDown ../dramaticReveal)}}flipped{{/if}}">
+                            <div class="cv-card-container {{#if image.back}}cv-flip-button{{/if}}"
+                                 {{#if image.back}}data-action="flip"{{/if}}>
+                                {{#if image.back}}
+                                <img src="{{image.back}}" class="cv-card-back" alt="">
+                                {{/if}}
+                                <img src="{{image.front}}" class="cv-card-front" alt="">
+                                <div class="cv-glint"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {{/each}}
+            </div>
+        </div>
+    </div>
+</div>

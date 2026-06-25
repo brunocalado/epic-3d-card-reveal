@@ -1,0 +1,22 @@
+/*
+ * Styles for the CardAppearanceSettings menu form (scripts/card-appearance-settings.js).
+ *
+ * Scoped under the module id class on the AppV2 root element. CSS class identifiers
+ * can't legally begin with a digit, so the `[class~=...]` attribute form is used
+ * instead of an escaped class selector — same specificity, no escapes.
+ */
+[class~="epic-3d-card-reveal"].card-appearance-settings {
+    /*
+     * Shared form styling (tokens, inputs, hints, footer) comes from base.css via the
+     * `.application` scope; this file only handles the few hand-built widgets so the color
+     * picker and glow-intensity slider stretch like the other fields.
+     */
+    .form-group {
+        align-items: center;
+
+        color-picker,
+        range-picker {
+            flex: 2;
+        }
+    }
+}

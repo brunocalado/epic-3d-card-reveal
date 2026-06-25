@@ -1,0 +1,22 @@
+{{!--
+    Rendered by CardAppearanceSettings (settings menu form).
+    HandlebarsApplicationMixin requires each part to render a single root element,
+    hence the wrapping div (standard-form keeps core's form-group spacing).
+    Labels and hints come from the CardAppearanceData schema. The glow intensity group
+    is hand-built so it renders as a slider (range-picker) rather than the plain
+    number input a bare NumberField would produce.
+--}}
+<div class="standard-form">
+    {{formGroup fields.glowColor value=source.glowColor}}
+
+    <div class="form-group">
+        <label>{{fields.glowIntensity.label}}</label>
+        <div class="form-fields">
+            <range-picker name="glowIntensity" value="{{source.glowIntensity}}" min="0" max="1" step="0.05"></range-picker>
+        </div>
+        <p class="hint">{{fields.glowIntensity.hint}}</p>
+    </div>
+
+    {{formGroup fields.backImage value=source.backImage}}
+    {{formGroup fields.dramaticRevealDelay value=source.dramaticRevealDelay}}
+</div>

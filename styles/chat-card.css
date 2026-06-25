@@ -1,0 +1,110 @@
+/*
+ * Chat-card preview styling (built by buildChatCard / _reopenBody in scripts/helpers.js).
+ *
+ * Unlike the module's own ApplicationV2 windows, this markup is injected into the chat log —
+ * foreign DOM owned by Foundry core and, more aggressively, by the active game system. Systems
+ * such as dnd5e style generic chat classes (.chat-card, .card-header, h3, img, span) and often
+ * with !important, which used to leak stray margins, borders and link colors into our card.
+ *
+ * Two defenses make the card immune:
+ *   1. The markup uses unique, module-prefixed class names so no system selector can match it.
+ *   2. Every rule here is !important and includes a reset layer, so even a system !important rule
+ *      of equal specificity can't override us (our selectors carry the module-id class, so they
+ *      are strictly more specific, and this stylesheet loads after the system's).
+ * The !important density is intentional and scoped exclusively to our own chat card — it never
+ * touches core or system chat messages.
+ *
+ * The accent color arrives inline as the --e3cr-chat-accent custom property (set per message in
+ * buildChatCard); the #C9A060 fallback keeps the card styled if it is ever absent. Fonts use
+ * var(--font-primary), which Foundry always ships, so the title never depends on a font that may
+ * be missing in some worlds. The `[class~=...]` form matches the other module stylesheets.
+ */
+[class~="epic-3d-card-reveal-chat"] {
+    border: 2px solid var(--e3cr-chat-accent, #C9A060) !important;
+    border-radius: 8px !important;
+    overflow: hidden !important;
+    background: #191919 !important;
+    color: rgb(255 255 255 / 90%) !important;
+    font-family: var(--font-primary) !important;
+    line-height: 1.4 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+
+    /* Neutralize system-injected margins so the header and body sit flush and the dark fill
+       reaches the accent border on every side. Padding is set per-component below, so rich-text
+       descriptions keep their internal spacing. */
+    *, *::before, *::after {
+        box-sizing: border-box !important;
+        margin: 0 !important;
+    }
+
+    .epic-3d-card-reveal-chat-header {
+        display: block !important;
+        padding: 8px !important;
+        background: #191919 !important;
+        border: 0 !important;
+        border-bottom: 2px solid var(--e3cr-chat-accent, #C9A060) !important;
+    }
+
+    .epic-3d-card-reveal-chat-title {
+        margin: 0 !important;
+        width: 100% !important;
+        color: var(--e3cr-chat-accent, #C9A060) !important;
+        font-family: var(--font-primary) !important;
+        font-weight: 700 !important;
+        font-size: 1.25rem !important;
+        line-height: 1.2 !important;
+        text-align: center !important;
+        text-transform: uppercase !important;
+        letter-spacing: 1px !important;
+        border: 0 !important;
+        background: none !important;
+        text-shadow: none !important;
+    }
+
+    .epic-3d-card-reveal-chat-body {
+        padding: 20px !important;
+        min-height: 120px !important;
+        background: #191919 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 10px !important;
+        text-align: center !important;
+    }
+
+    .epic-3d-card-reveal-chat-thumb {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        gap: 8px !important;
+        width: 100% !important;
+        cursor: pointer !important;
+    }
+
+    .epic-3d-card-reveal-chat-img {
+        max-width: 65% !important;
+        height: auto !important;
+        max-height: none !important;
+        border: 0 !important;
+        border-radius: 6px !important;
+        box-shadow: none !important;
+        filter: none !important;
+        background: none !important;
+    }
+
+    .epic-3d-card-reveal-chat-caption {
+        color: rgb(255 255 255 / 75%) !important;
+        font-family: var(--font-primary) !important;
+        font-size: 0.85em !important;
+        text-decoration: none !important;
+    }
+
+    .epic-3d-card-reveal-chat-desc {
+        color: rgb(255 255 255 / 90%) !important;
+        font-family: var(--font-primary) !important;
+        text-align: center !important;
+    }
+}

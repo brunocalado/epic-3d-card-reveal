@@ -1,0 +1,144 @@
+/*
+ * CardsConfig sheets: `_registerCardImgClickInDeck` (scripts/hooks.js) marks the
+ * sheet root with `data-dcv-card-click-bound` when — and only when — the module's
+ * click-to-view listener is active. Scoping on that attribute keeps the pointer
+ * cursor off core deck sheets the module hasn't touched (e.g. when the
+ * card-icon-click setting is disabled).
+ */
+[data-dcv-card-click-bound] .card img.card-face,
+[data-dcv-card-click-bound] .cards img.face {
+    cursor: pointer;
+}
+
+/*
+ * Shared visual language for the module's ApplicationV2 forms (Create Macro and
+ * Card Appearance). Both apps carry the module id class on their root alongside
+ * Foundry's `application` class, so scoping on `[class~="..."].application` targets
+ * only the module's own windows — never core sheets, and never the chat previews
+ * above (those use the distinct `epic-3d-card-reveal-msg` token, which `[class~=]`
+ * treats as a separate word). Design tokens live here once; the per-app stylesheets
+ * (macro-builder.css, card-appearance-settings.css) consume them for a consistent look.
+ */
+[class~="epic-3d-card-reveal"].application {
+    --epic-3d-card-reveal-surface: rgba(255, 255, 255, 0.045);
+    --epic-3d-card-reveal-surface-raised: rgba(255, 255, 255, 0.09);
+    --epic-3d-card-reveal-border: rgba(255, 255, 255, 0.12);
+    --epic-3d-card-reveal-border-strong: rgba(255, 255, 255, 0.22);
+    --epic-3d-card-reveal-accent: #e0b25a;
+    --epic-3d-card-reveal-accent-soft: rgba(224, 178, 90, 0.28);
+    --epic-3d-card-reveal-toggle-off: rgba(255, 255, 255, 0.2);
+    --epic-3d-card-reveal-toggle-on: #4caf72;
+
+    /* Legibility is the priority: lift labels, legends and hints off the dark frame. */
+    label {
+        color: var(--color-text-primary, #ececf0);
+        font-weight: 600;
+    }
+
+    legend {
+        color: var(--color-text-primary, #ececf0);
+        font-weight: 700;
+    }
+
+    .hint {
+        color: var(--color-text-secondary, #c4c2cc);
+        opacity: 0.95;
+    }
+
+    fieldset {
+        border: 1px solid var(--epic-3d-card-reveal-border);
+        border-radius: 8px;
+        padding: 0.35rem 0.85rem 0.85rem;
+        background: var(--epic-3d-card-reveal-surface);
+    }
+
+    /* Consistent rounded fields with a clear accent focus ring. */
+    input[type="text"],
+    input[type="number"],
+    input[type="search"],
+    select {
+        border-radius: 6px;
+        border: 1px solid var(--epic-3d-card-reveal-border);
+        color: var(--color-text-primary, #ececf0);
+    }
+
+    input[type="text"]:focus,
+    input[type="number"]:focus,
+    input[type="search"]:focus,
+    select:focus {
+        outline: none;
+        border-color: var(--epic-3d-card-reveal-accent);
+        box-shadow: 0 0 0 2px var(--epic-3d-card-reveal-accent-soft);
+    }
+
+    /* Apple-style toggle switches replacing the native boolean checkboxes. */
+    .form-fields:has(> input[type="checkbox"]) {
+        justify-content: flex-end;
+    }
+
+    input[type="checkbox"] {
+        appearance: none;
+        -webkit-appearance: none;
+        flex: 0 0 auto;
+        position: relative;
+        width: 2.4rem;
+        height: 1.35rem;
+        margin: 0;
+        padding: 0;
+        border: none;
+        border-radius: 1rem;
+        background: var(--epic-3d-card-reveal-toggle-off);
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+    }
+
+    input[type="checkbox"]::before {
+        content: "";
+        position: absolute;
+        top: 0.15rem;
+        left: 0.15rem;
+        width: 1.05rem;
+        height: 1.05rem;
+        border-radius: 50%;
+        background: #fff;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+        transition: transform 0.2s ease;
+    }
+
+    /* Foundry's core checkbox draws its check glyph on ::after; suppress it so only the
+       toggle knob (our ::before) shows, instead of a checkbox overlapping the switch. */
+    input[type="checkbox"]::after,
+    input[type="checkbox"]:checked::after {
+        content: none;
+        display: none;
+    }
+
+    input[type="checkbox"]:checked {
+        background: var(--epic-3d-card-reveal-toggle-on);
+    }
+
+    input[type="checkbox"]:checked::before {
+        content: "";
+        transform: translateX(1.05rem);
+    }
+
+    input[type="checkbox"]:focus-visible {
+        outline: 2px solid var(--epic-3d-card-reveal-accent);
+        outline-offset: 2px;
+    }
+
+    /* Footer action buttons: rounded, with a subtle hover lift. */
+    .form-footer button {
+        border-radius: 6px;
+        font-weight: 600;
+        transition: background-color 0.15s ease, box-shadow 0.15s ease, transform 0.05s ease;
+    }
+
+    .form-footer button:hover {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+    }
+
+    .form-footer button:active {
+        transform: translateY(1px);
+    }
+}

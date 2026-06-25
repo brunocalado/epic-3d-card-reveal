@@ -1,0 +1,32 @@
+{{!--
+    Rendered by RevealSoundSettings (settings menu form).
+    HandlebarsApplicationMixin requires each part to render a single root element,
+    hence the wrapping div (standard-form keeps core's form-group spacing).
+    Labels and hints come from the RevealSoundData schema. The volume group is hand-built
+    so it renders as a slider (range-picker) rather than the plain number input a bare
+    AlphaField would produce; the channel select is hand-built so its options carry the
+    localized labels resolved from CONST.AUDIO_CHANNELS.
+--}}
+<div class="standard-form">
+    {{formGroup fields.sound value=source.sound}}
+
+    <div class="form-group">
+        <label>{{fields.volume.label}}</label>
+        <div class="form-fields">
+            <range-picker name="volume" value="{{source.volume}}" min="0" max="1" step="0.05"></range-picker>
+        </div>
+        <p class="hint">{{fields.volume.hint}}</p>
+    </div>
+
+    <div class="form-group">
+        <label>{{fields.channel.label}}</label>
+        <div class="form-fields">
+            <select name="channel">
+                {{#each channels as |c|}}
+                <option value="{{c.value}}" {{#if c.selected}}selected{{/if}}>{{c.label}}</option>
+                {{/each}}
+            </select>
+        </div>
+        <p class="hint">{{fields.channel.hint}}</p>
+    </div>
+</div>

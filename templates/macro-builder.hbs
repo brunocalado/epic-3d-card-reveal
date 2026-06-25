@@ -1,0 +1,177 @@
+{{!--
+    Rendered by MacroBuilder (scripts/macro-builder.js).
+    HandlebarsApplicationMixin requires a single root element, hence the wrapping div
+    (standard-form keeps core's form-group spacing).
+
+    Two tabs:
+      - "Options"    : per-type fields. The macroType select toggles which [data-macro-section]
+                       fieldset is visible (handled in _onRender).
+      - "Appearance" : shared visual settings applied to whichever macro type is generated.
+
+    Every input has a UNIQUE flat name (front, drawDeck, glowColor, share, …). formGroup names each
+    input after the field's leaf name, FormDataExtended returns one flat object, and because no
+    name is reused across sections the hidden ones never collide with the active one.
+--}}
+<div class="standard-form macro-builder-body">
+    {{!-- The icon button sits beside the name field; clicking it opens a FilePicker (pickIcon
+          action) that writes the chosen path into the hidden macroIcon input and the thumbnail. --}}
+    <div class="form-group">
+        <label>Macro name</label>
+        <div class="form-fields">
+            <input type="text" name="macroName" placeholder="Leave blank for an automatic name" />
+            <button type="button" class="cmb-icon-pick" data-action="pickIcon"
+                    data-tooltip="Choose the macro's hotbar icon">
+                <img src="{{data.macroIcon}}" alt="Macro icon" />
+            </button>
+            <input type="hidden" name="macroIcon" value="{{data.macroIcon}}" />
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label>Macro type</label>
+        <div class="form-fields">
+            <select name="macroType">
+                {{#each macroTypes as |t|}}
+                <option value="{{t.value}}">{{t.label}}</option>
+                {{/each}}
+            </select>
+        </div>
+    </div>
+
+    <nav class="cmb-tabs">
+        <button type="button" class="cmb-tab active" data-tab-target="options">
+            <i class="fa-solid fa-sliders"></i> Options
+        </button>
+        <button type="button" class="cmb-tab" data-tab-target="appearance">
+            <i class="fa-solid fa-palette"></i> Appearance
+        </button>
+    </nav>
+
+    <section class="cmb-panel" data-tab-panel="options">
+        <fieldset data-macro-section="display">
+            <legend>Display images</legend>
+            <p class="hint">Show one or more images in the 3D viewer. No deck involved.</p>
+            <button type="button" class="cmb-row-add" data-display-add>
+                <i class="fa-solid fa-plus"></i> Add image
+            </button>
+            <div class="cmb-card-list" data-display-cards>
+                {{!-- One initial row; #initDisplayCards clones/removes rows and renumbers the
+                      indexed `displayCards.<i>.front/back` names that FormDataExtended expands. --}}
+                <div class="cmb-card-row" data-card-row>
+                    <file-picker type="image" name="displayCards.0.front" data-role="front" placeholder="Front image"></file-picker>
+                    <file-picker type="image" name="displayCards.0.back" data-role="back" placeholder="Back image (optional)"></file-picker>
+                    <button type="button" class="cmb-row-remove" data-row-remove data-tooltip="Remove image">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+            </div>
+        </fieldset>
+
+        <fieldset data-macro-section="draw">
+            <legend>Draw from a deck</legend>
+            <p class="hint">Draw one or more random cards from a deck into a discard pile and display them.</p>
+            <div class="form-group">
+                <label>Deck</label>
+                <div class="form-fields">
+                    <select name="drawDeck">
+                        {{#each decks as |d|}}
+                        <option value="{{d.name}}">{{d.name}}</option>
+                        {{/each}}
+                    </select>
+                </div>
+                <p class="hint">The source deck to draw a card from.</p>
+            </div>
+            <div class="form-group">
+                <label>Discard pile</label>
+                <div class="form-fields">
+                    <select name="drawDiscardPile">
+                        <option value="">Auto-detect / create</option>
+                        {{#each piles as |p|}}
+                        <option value="{{p.name}}">{{p.name}}</option>
+                        {{/each}}
+                    </select>
+                </div>
+                <p class="hint">Where the drawn card goes. Leave on auto to detect an existing pile or create one.</p>
+            </div>
+            {{formGroup fields.quantity value=data.quantity}}
+        </fieldset>
+
+        <fieldset data-macro-section="view">
+            <legend>View specific cards</legend>
+            <p class="hint">Show one or more existing cards without drawing them. Drag cards from a deck, hand or pile &mdash; each card's deck and id are captured automatically.</p>
+            <div class="card-drop" data-card-drop>
+                <span class="card-drop-name">Drag cards here</span>
+            </div>
+            <div class="cmb-view-list" data-view-list></div>
+            <input type="hidden" name="viewCards" value="[]" />
+        </fieldset>
+    </section>
+
+    <section class="cmb-panel" data-tab-panel="appearance" hidden>
+        <p class="hint">These settings apply to every macro type.</p>
+        {{formGroup fields.glowColor value=data.glowColor}}
+
+        {{!-- Hand-built so glow intensity renders as a slider (range-picker) rather than the plain
+              number input a bare NumberField produces, matching the Card Appearance menu. --}}
+        <div class="form-group">
+            <label>{{fields.glowIntensity.label}}</label>
+            <div class="form-fields">
+                <range-picker name="glowIntensity" value="{{data.glowIntensity}}" min="0" max="1" step="0.05"></range-picker>
+            </div>
+            <p class="hint">{{fields.glowIntensity.hint}}</p>
+        </div>
+
+        {{formGroup fields.faceDown value=data.faceDown}}
+        {{formGroup fields.dramaticReveal value=data.dramaticReveal}}
+
+        {{!-- Dramatic-reveal delay. Only meaningful when "Dramatic reveal" is on, so the
+              dramaticReveal checkbox toggles this block's visibility (and forces "Start face-down"
+              on) in #initDramaticToggle. The input stays in the DOM while hidden, but applyReveal
+              ignores it unless reveal is on. --}}
+        <div data-reveal-extra hidden>
+            {{formGroup fields.dramaticRevealDelay value=data.dramaticRevealDelay}}
+        </div>
+
+        {{formGroup fields.share value=data.share}}
+        {{formGroup fields.sendToChat value=data.sendToChat}}
+
+        {{!-- Reveal sound. The soundMode select toggles the [data-sound-custom] block (handled in
+              _onRender). Hidden custom inputs still submit, but applySound only reads them in Custom
+              mode, so Default bakes nothing and None bakes an explicit silent override. --}}
+        <div class="form-group">
+            <label>Reveal sound</label>
+            <div class="form-fields">
+                <select name="soundMode">
+                    {{#each soundModes as |m|}}
+                    <option value="{{m.value}}">{{m.label}}</option>
+                    {{/each}}
+                </select>
+            </div>
+            <p class="hint">Use the module's default reveal sound, pick a custom one, or play no sound at all.</p>
+        </div>
+
+        <div data-sound-custom hidden>
+            {{formGroup fields.sound value=data.sound}}
+
+            <div class="form-group">
+                <label>{{fields.soundVolume.label}}</label>
+                <div class="form-fields">
+                    <range-picker name="soundVolume" value="{{data.soundVolume}}" min="0" max="1" step="0.05"></range-picker>
+                </div>
+                <p class="hint">{{fields.soundVolume.hint}}</p>
+            </div>
+
+            <div class="form-group">
+                <label>{{fields.soundChannel.label}}</label>
+                <div class="form-fields">
+                    <select name="soundChannel">
+                        {{#each channels as |c|}}
+                        <option value="{{c.value}}" {{#if c.selected}}selected{{/if}}>{{c.label}}</option>
+                        {{/each}}
+                    </select>
+                </div>
+                <p class="hint">{{fields.soundChannel.hint}}</p>
+            </div>
+        </div>
+    </section>
+</div>
