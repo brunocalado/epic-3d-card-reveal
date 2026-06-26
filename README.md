@@ -106,5 +106,4 @@ https://github.com/brunocalado/epic-3d-card-reveal/issues
 
 - Released under the [LICENSE](LICENSE).
 - This module is a fork/rewrite of [orcnog-card-viewer](https://github.com/orcnog/orcnog-card-viewer), which took its visual inspiration from a popular 5e toolset.
-- demo-card.webp by https://www.instagram.com/carolcanellas.art/
 - [reveal.ogg](https://pixabay.com/sound-effects/musical-victory-chime-366449/)
