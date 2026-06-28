@@ -30,7 +30,7 @@ export class CardAppearanceData extends foundry.abstract.DataModel {
                 categories: ["IMAGE"],
                 required: true,
                 blank: false,
-                initial: `modules/${MODULE_ID}/assets/cardbacks/orcnogback.webp`,
+                initial: `modules/${MODULE_ID}/assets/demo-card-back.webp`,
                 label: "Card back image",
                 hint: "Default back image used when a card has no back of its own."
             }),
