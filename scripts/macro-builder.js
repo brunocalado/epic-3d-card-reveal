@@ -264,6 +264,62 @@ function readDisplayCards(d) {
 }
 
 /**
+ * Human-readable comment for each argument the builder can bake into a macro, keyed by the option
+ * name as it appears in the generated `EpicCards.*` call. Used by {@link objectLiteralWithComments}
+ * so a user opening a generated macro can see what every baked-in value does. Keys absent from a
+ * given call are simply unused.
+ * @type {Object<string, string>}
+ */
+const ARG_COMMENTS = {
+    // Display / shared appearance
+    cards: "Cards to show; each { front, back } is one card's face/back image path.",
+    glowColor: "Glow hue around the card (any CSS color).",
+    glowIntensity: "Glow strength, 0-1 (0 turns the glow off).",
+    sound: "Reveal sound: a path plays it, \"\" forces silence (omitted = world default).",
+    soundVolume: "Reveal-sound volume, 0-1.",
+    soundChannel: "Audio channel: interface, music, or environment.",
+    revealDelay: "Dramatic-reveal delay in ms before the card auto-flips.",
+    reversalChance: "Chance (0-100) each card is shown upside-down (Tarot-style).",
+    faceDown: "Start face-down (flip to reveal).",
+    sendToChat: "Also post a clickable chat message that re-opens the card.",
+    // Dealer config
+    deckName: "Name of the source Cards deck.",
+    discardPileName: "Discard pile to draw into (auto-matched/created when omitted).",
+    // Draw options
+    quantity: "How many cards to draw.",
+    face: "Initial face: \"up\", \"down\", or \"reveal\" (dramatic auto-flip).",
+    share: "Broadcast the view to all connected clients.",
+    showDescription: "Include the card's description in the chat message."
+};
+
+/**
+ * Serialize a plain options object into a pretty-printed JS object literal where every top-level key
+ * carries a trailing `// ...` comment from {@link ARG_COMMENTS}. Generated macros use this instead of
+ * a bare `JSON.stringify` so the saved script is self-documenting. Nested values (e.g. the `cards`
+ * array) are JSON-stringified and the comment rides their opening line; keys with no known comment
+ * are emitted plain.
+ * @param {object} obj  The options object to serialize.
+ * @returns {string}  A multi-line JS object literal (`"{}"` when empty).
+ */
+function objectLiteralWithComments(obj) {
+    const keys = Object.keys(obj);
+    if (!keys.length) return "{}";
+    const lines = keys.map((key, i) => {
+        const comma = i < keys.length - 1 ? "," : "";
+        const comment = ARG_COMMENTS[key] ? `  // ${ARG_COMMENTS[key]}` : "";
+        // Indent every line of the value by one level so nested entries sit under the key.
+        const valueLines = JSON.stringify(obj[key], null, 2).split("\n").map(l => `  ${l}`);
+        const first = `  ${JSON.stringify(key)}: ${valueLines[0].trimStart()}`;
+        if (valueLines.length === 1) return `${first}${comma}${comment}`;
+        // Multi-line value: comment rides the opening line; the comma closes the final line.
+        const rest = valueLines.slice(1);
+        rest[rest.length - 1] += comma;
+        return [`${first}${comment}`, ...rest].join("\n");
+    });
+    return `{\n${lines.join("\n")}\n}`;
+}
+
+/**
  * Distil the form data into `EpicCards.Display(...).render(...)` arguments.
  * @param {object} d  The flat form data.
  * @returns {{opts: object, share: boolean, reveal: boolean}}
@@ -285,7 +341,12 @@ function displayArgs(d) {
  */
 function buildDisplayCommand(d) {
     const { opts, share, reveal } = displayArgs(d);
-    return `EpicCards.Display(${JSON.stringify(opts, null, 2)}).render(${share}, ${reveal});`;
+    return [
+        `EpicCards.Display(${objectLiteralWithComments(opts)}).render(`,
+        `  ${share},  // shareToAll: broadcast the view to all connected clients`,
+        `  ${reveal}  // dramaticReveal: render face-down, then auto-flip after the delay`,
+        `);`
+    ].join("\n");
 }
 
 /**
@@ -308,7 +369,7 @@ function drawArgs(d) {
  */
 function buildDrawCommand(d) {
     const { dealer, draw } = drawArgs(d);
-    return `EpicCards.Dealer(${JSON.stringify(dealer, null, 2)}).draw(${JSON.stringify(draw, null, 2)});`;
+    return `EpicCards.Dealer(${objectLiteralWithComments(dealer)}).draw(${objectLiteralWithComments(draw)});`;
 }
 
 /**
@@ -347,7 +408,15 @@ function viewArgs(d) {
  */
 function buildViewCommand(d) {
     const { dealer, cards, faceDown, reveal, share, sendToChat, showDescription } = viewArgs(d);
-    return `EpicCards.Dealer(${JSON.stringify(dealer, null, 2)}).view(${JSON.stringify(cards)}, ${faceDown}, ${reveal}, ${share}, ${JSON.stringify({ sendToChat, showDescription })});`;
+    return [
+        `EpicCards.Dealer(${objectLiteralWithComments(dealer)}).view(`,
+        `  ${JSON.stringify(cards)},  // cards: ID(s)/name(s), searched across every stack in the world`,
+        `  ${faceDown},  // faceDown: render face-down initially`,
+        `  ${reveal},  // dramaticReveal: render face-down, then auto-flip after the delay`,
+        `  ${share},  // share: broadcast the view to all connected clients`,
+        `  ${JSON.stringify({ sendToChat, showDescription })}  // sendToChat: post a re-open message; showDescription: include the card's description`,
+        `);`
+    ].join("\n");
 }
 
 /**
