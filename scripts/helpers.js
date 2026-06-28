@@ -111,14 +111,19 @@ async function _postChat(content, isPublic) {
  * @param {string} front           Front image path.
  * @param {string} alt             Image alt text.
  * @param {string} dataAttrs       Pre-escaped `data-*` attributes describing how to re-open.
+ * @param {boolean} [reversed=false]  Whether the card is shown upside-down (Tarot-style): rotates the
+ *                                    thumbnail 180° and adds a "Reversed" badge. The description is unchanged.
  * @returns {string} The inner body HTML for {@link buildChatCard}.
  */
-function _reopenBody(front, alt, dataAttrs) {
+function _reopenBody(front, alt, dataAttrs, reversed = false) {
     // Keep the `<MODULE_ID>-msg` token and `card-face` class: the chat click handler
     // (scripts/hooks.js `_registerCardImgClickInChat`) selects on both to re-open the viewer.
     // The `-chat-*` classes are the styling hooks consumed by styles/chat-card.css.
+    const imgClass = `card-face ${MODULE_ID}-chat-img${reversed ? ` ${MODULE_ID}-chat-img-reversed` : ""}`;
+    const badge = reversed ? `<span class="${MODULE_ID}-chat-reversed">Reversed</span>` : "";
     return `<div class="${MODULE_ID}-msg ${MODULE_ID}-chat-thumb" ${dataAttrs}>
-            <img class="card-face ${MODULE_ID}-chat-img" src="${escapeHtmlAttr(front)}" alt="${escapeHtmlAttr(alt)}" />
+            <img class="${imgClass}" src="${escapeHtmlAttr(front)}" alt="${escapeHtmlAttr(alt)}" />
+            ${badge}
             <span class="${MODULE_ID}-chat-caption">Click to reveal</span>
         </div>`;
 }
@@ -136,12 +141,14 @@ function _reopenBody(front, alt, dataAttrs) {
  * @param {string} opts.cardName           Display name of the card (used as the card title).
  * @param {string} opts.front              Front image path.
  * @param {string} [opts.desc]             Card description (rich text).
+ * @param {boolean} [opts.reversed=false]  Show the card upside-down (Tarot-style) in the preview, and
+ *                                         store the orientation on the message so a re-open matches it.
  * @param {boolean} [opts.isPublic=false]  Post publicly instead of whispering the GM.
  * @returns {Promise<ChatMessage|undefined>} The created message, or undefined when no GM is available to whisper.
  */
-export async function postCardToChat({ deckName, cardId, cardName, front, desc, isPublic = false }) {
-    const dataAttrs = `data-reopen-kind="card" data-deck="${escapeHtmlAttr(deckName)}" data-card="${escapeHtmlAttr(cardId)}"`;
-    let body = _reopenBody(front, cardName, dataAttrs);
+export async function postCardToChat({ deckName, cardId, cardName, front, desc, reversed = false, isPublic = false }) {
+    const dataAttrs = `data-reopen-kind="card" data-deck="${escapeHtmlAttr(deckName)}" data-card="${escapeHtmlAttr(cardId)}" data-reversed="${!!reversed}"`;
+    let body = _reopenBody(front, cardName, dataAttrs, reversed);
     if (desc) body += `<div class="${MODULE_ID}-chat-desc">${desc}</div>`;
 
     return _postChat(buildChatCard(cardName, body), isPublic);
@@ -160,12 +167,14 @@ export async function postCardToChat({ deckName, cardId, cardName, front, desc, 
  * @param {string} [opts.glowColor]        Glow color to restore when re-opened.
  * @param {number} [opts.glowIntensity]    Glow strength (0..1) to restore when re-opened.
  * @param {boolean} [opts.faceDown=false]  Whether to re-open face-down.
+ * @param {boolean} [opts.reversed=false]  Show the image upside-down (Tarot-style) in the preview, and
+ *                                         store the orientation on the message so a re-open matches it.
  * @param {boolean} [opts.isPublic=false]  Post publicly instead of whispering the GM.
  * @returns {Promise<ChatMessage|undefined>} The created message, or undefined when no GM is available to whisper.
  */
-export async function postImageToChat({ front, back, glowColor, glowIntensity, faceDown = false, isPublic = false }) {
-    const dataAttrs = `data-reopen-kind="image" data-front="${escapeHtmlAttr(front)}" data-back="${escapeHtmlAttr(back ?? "")}" data-glow="${escapeHtmlAttr(glowColor ?? "")}" data-glow-intensity="${escapeHtmlAttr(glowIntensity ?? "")}" data-face-down="${faceDown}"`;
-    const body = _reopenBody(front, "", dataAttrs);
+export async function postImageToChat({ front, back, glowColor, glowIntensity, faceDown = false, reversed = false, isPublic = false }) {
+    const dataAttrs = `data-reopen-kind="image" data-front="${escapeHtmlAttr(front)}" data-back="${escapeHtmlAttr(back ?? "")}" data-glow="${escapeHtmlAttr(glowColor ?? "")}" data-glow-intensity="${escapeHtmlAttr(glowIntensity ?? "")}" data-face-down="${faceDown}" data-reversed="${!!reversed}"`;
+    const body = _reopenBody(front, "", dataAttrs, reversed);
 
     return _postChat(buildChatCard("Card", body), isPublic);
 }

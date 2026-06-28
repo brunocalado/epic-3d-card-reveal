@@ -234,8 +234,8 @@ class CardViewerApp extends foundry.applications.api.HandlebarsApplicationMixin(
             // If still mid-reveal, hold the public preview until the reveal completes so sharing
             // doesn't spoil the front before everyone's viewer has flipped.
             postChatAfterReveal(this._revealLocked, this.revealDelay, () => {
-                for (const { id, name, front, desc } of this.chatMeta.cards) {
-                    postCardToChat({ deckName: this.chatMeta.deckName, cardId: id, cardName: name, front, desc, isPublic: true });
+                for (const { id, name, front, desc, reversed } of this.chatMeta.cards) {
+                    postCardToChat({ deckName: this.chatMeta.deckName, cardId: id, cardName: name, front, desc, reversed, isPublic: true });
                 }
             });
         }
@@ -744,6 +744,7 @@ export default class FancyDisplay {
                             glowColor,
                             glowIntensity,
                             faceDown: !!this.faceDown,
+                            reversed: !!image.reversed,
                             isPublic: shareToAll
                         });
                     }

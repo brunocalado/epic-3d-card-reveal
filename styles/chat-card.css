@@ -95,6 +95,22 @@
         background: none !important;
     }
 
+    /* Tarot-style "reversed" preview: the thumbnail is rotated 180° so the chat matches the viewer.
+       The card's description text is never rotated — only this image and the badge below convey it. */
+    .epic-3d-card-reveal-chat-img-reversed {
+        transform: rotate(180deg) !important;
+    }
+
+    /* "Reversed" badge shown beneath a reversed thumbnail, in the accent color. */
+    .epic-3d-card-reveal-chat-reversed {
+        color: var(--e3cr-chat-accent, #C9A060) !important;
+        font-family: var(--font-primary) !important;
+        font-size: 0.8em !important;
+        font-weight: 700 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 1px !important;
+    }
+
     .epic-3d-card-reveal-chat-caption {
         color: rgb(255 255 255 / 75%) !important;
         font-family: var(--font-primary) !important;

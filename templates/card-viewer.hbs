@@ -34,7 +34,7 @@
                                 {{#if image.back}}
                                 <img src="{{image.back}}" class="cv-card-back" alt="">
                                 {{/if}}
-                                <img src="{{image.front}}" class="cv-card-front" alt="">
+                                <img src="{{image.front}}" class="cv-card-front{{#if image.reversed}} cv-reversed{{/if}}" alt="">
                                 <div class="cv-glint"></div>
                             </div>
                         </div>

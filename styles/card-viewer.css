@@ -203,6 +203,14 @@
         border: 0;
         border-radius: 3%;
         vertical-align: middle;
+
+        /* Tarot-style "reversed" card: rotate only the meaningful face 180° in-plane, leaving the
+           back and glint upright. The face carries no transform of its own, so this composes cleanly
+           with the flip (rotateY on .cv-flip-container) and the cursor tilt (inline transform on
+           .cv-perspective-container) without any of them clobbering the others. */
+        &.cv-reversed {
+            transform: rotate(180deg);
+        }
     }
 
     .cv-card-back {

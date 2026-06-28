@@ -17,6 +17,7 @@ Drawing a card from the Deck of Many Things should be a *table-stopping event* �
 - 🔍 **Spotlight one card** — right-click any card in a hand to enlarge it on its own; right-click again to bring the whole hand back.
 - 👁️ **Share with one click** — love what you drew? Hit the eye button and *everyone at the table* instantly sees your card. Players can share too, not just the GM.
 - 🎭 **Dramatic reveal** — cards can appear face-down and flip themselves over after a suspenseful pause.
+- 🔮 **Reversed cards (Tarot-style)** — give a macro a reversal chance and each card has that percent chance of landing upside-down, just like a real Tarot pull. The card text never changes — the meaning is read from the orientation. Off by default; turn it on per macro (or with the Macro Builder's *Reversed chance* slider).
 - 💬 **Never lose a card** — every card you view is quietly whispered to the GM in chat. Shared cards are posted publicly, so anyone can click the chat thumbnail to admire them again later.
 - 🖱️ **Click any card thumbnail** — in the sidebar, in a deck window, or in chat — and it opens in the viewer.
 

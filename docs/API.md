@@ -55,6 +55,17 @@ Every entry point can override these per call with `sound`, `soundVolume`, and `
 
 `soundVolume` and `soundChannel` fall back to the world default whenever omitted. The macro builder exposes all of this as a **Reveal sound** control (Appearance tab) with three modes — *Use module default*, *Custom sound* (file + volume + channel), and *No sound* — and bakes the result into the generated macro.
 
+## Reversed cards (Tarot-style)
+
+Every entry point accepts an optional `reversalChance` (`0`–`100`): the percent chance that each card it shows is rendered **upside-down** (rotated 180°), the way a Tarot reading distinguishes a reversed card.
+
+- **Off by default.** `reversalChance` defaults to `0`, so nothing is reversed unless you ask for it. `50` gives each card a coin-flip; `100` reverses every card.
+- **Per card.** With multiple cards, each one rolls independently.
+- **Re-rolled on every display.** The orientation is **not** stored on the card — drawing or viewing the same card again rolls afresh.
+- **Text is never changed.** Only the *visual* is flipped; the card's chat description is posted exactly as written, matching real Tarot practice where the reversed meaning is inferred by the reader. The chat thumbnail mirrors the orientation and is tagged **"Reversed"**.
+- **Consistent across the table and on re-open.** The roll happens once on the client that triggers the display, so every player who is shown the card sees the same orientation. The orientation is stored on the chat message, so clicking the thumbnail re-opens the card the same way up it was published.
+- The macro builder exposes this as a **Reversed chance** slider (Appearance tab); leaving it at `0` bakes nothing into the generated macro.
+
 ---
 
 ## `EpicCards.Display(options)`
@@ -74,6 +85,7 @@ Construct a card-display instance for any image.
 | `soundVolume` | `number` (optional) | Reveal-sound volume (`0`–`1`). Omit to use the world default. |
 | `soundChannel` | `string` (optional) | Reveal-sound channel: `interface`, `music`, or `environment`. Omit to use the world default. |
 | `revealDelay` | `number` (optional) | Dramatic-reveal delay in ms, overriding the world default. Applies only when rendered with `dramaticReveal`. |
+| `reversalChance` | `number` (optional) | `0`–`100` chance that each image is shown upside-down (Tarot-style). `0` (default) disables it; re-rolled per display. See [Reversed cards](#reversed-cards-tarot-style). |
 
 ### Returns
 An instance with a `.render(shareToAll, dramaticReveal)` method.
@@ -113,6 +125,7 @@ Construct a dealer bound to a named deck (and, optionally, a named discard pile)
 | `soundVolume` | `number` (optional) | Reveal-sound volume (`0`–`1`). Omit to use the world default. |
 | `soundChannel` | `string` (optional) | Reveal-sound channel: `interface`, `music`, or `environment`. Omit to use the world default. |
 | `revealDelay` | `number` (optional) | Dramatic-reveal delay in ms for every card this dealer shows, overriding the world default. Applies only to dramatic-reveal draws/views. |
+| `reversalChance` | `number` (optional) | `0`–`100` chance that each card this dealer shows is upside-down (Tarot-style). `0` (default) disables it; re-rolled per display. See [Reversed cards](#reversed-cards-tarot-style). |
 
 Initialization is asynchronous (it resolves the deck/pile Documents by name); every method below awaits that internally, so you can call them immediately after construction.
 
@@ -165,6 +178,8 @@ Prefer not to write macros by hand? The module ships a fill-in **macro builder**
 Both open the same form and are GM-only. Generated macros land in the `3D Card Macros` folder.
 
 The Appearance tab also exposes the **Dramatic reveal** toggle; enabling it forces **Start face-down** on and reveals a **Dramatic reveal delay (ms)** field (seeded from the world default), baked into the generated macro as `revealDelay`. During a dramatic reveal the card cannot be clicked open early — every viewer waits out the delay — and the wait is synchronized to all players when the card is shared.
+
+The Appearance tab's **Reversed chance** slider sets `reversalChance` (`0`–`100`) on the generated macro; left at `0` it bakes nothing, so cards are never reversed unless you raise it. See [Reversed cards](#reversed-cards-tarot-style).
 
 # Macro example
 

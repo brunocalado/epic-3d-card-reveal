@@ -25,8 +25,10 @@ export default class CardDealer {
      * @param {string} [opts.soundChannel]       Optional reveal-sound audio channel override.
      * @param {number} [opts.revealDelay]        Optional dramatic-reveal delay override (ms). Used only when a
      *                                           card is shown with a dramatic reveal; omit for the world default.
+     * @param {number} [opts.reversalChance]     Optional 0..100 chance that each card is shown upside-down
+     *                                           (Tarot-style). 0 / omitted disables it. Re-rolled per display.
      */
-    constructor({ deckName, discardPileName, glowColor = null, glowIntensity, sound, soundVolume, soundChannel, revealDelay } = {}) {
+    constructor({ deckName, discardPileName, glowColor = null, glowIntensity, sound, soundVolume, soundChannel, revealDelay, reversalChance = 0 } = {}) {
         this.deckName = null;
         this.deck = null;
         this.pile = null;
@@ -45,6 +47,10 @@ export default class CardDealer {
         // Optional dramatic-reveal delay forwarded to FancyDisplay on draw()/view().
         // Falls back to the world default when undefined.
         this.revealDelay = revealDelay;
+
+        // Optional Tarot-style "reversed" chance (0..100). Each card displayed by this dealer rolls
+        // independently against it; the orientation is re-rolled per display (never persisted).
+        this.reversalChance = reversalChance;
 
         this.initPromise = new Promise((resolve) => { this._initPromiseResolve = resolve; });
 
@@ -142,8 +148,8 @@ export default class CardDealer {
             // Drawn cards land in chat (when enabled): publicly when shared with everyone, otherwise
             // as a GM whisper so the GM can re-open them later.
             const postPreviews = () => {
-                for (const { id, name, front, desc } of drawnArray) {
-                    postCardToChat({ deckName, cardId: id, cardName: name, front, desc, isPublic: share });
+                for (const { id, name, front, desc, reversed } of drawnArray) {
+                    postCardToChat({ deckName, cardId: id, cardName: name, front, desc, reversed, isPublic: share });
                 }
             };
 
@@ -210,8 +216,8 @@ export default class CardDealer {
             const manualReveal = !!faceDown && !dramaticReveal;
 
             const postPreviews = () => {
-                for (const { id, name, front, desc } of cardDataArray) {
-                    postCardToChat({ deckName, cardId: id, cardName: name, front, desc, isPublic: share });
+                for (const { id, name, front, desc, reversed } of cardDataArray) {
+                    postCardToChat({ deckName, cardId: id, cardName: name, front, desc, reversed, isPublic: share });
                 }
             };
 
@@ -309,9 +315,10 @@ export default class CardDealer {
     }
 
     /**
-     * Pull the displayable properties from a Card document.
+     * Pull the displayable properties from a Card document. The `reversed` flag is rolled here, so it
+     * is re-rolled on every draw/view (never persisted), matching the "re-roll each display" behavior.
      * @param {Card} card
-     * @returns {{id:string, name:string, front:string, back:string, desc:string, faceDown:boolean}}
+     * @returns {{id:string, name:string, front:string, back:string, desc:string, faceDown:boolean, reversed:boolean}}
      */
     _extractCardProperties(card) {
         return {
@@ -320,7 +327,8 @@ export default class CardDealer {
             front: card.faces[0].img,
             back: card.back.img,
             desc: card.faces[0].text,
-            faceDown: true
+            faceDown: true,
+            reversed: Math.random() * 100 < (this.reversalChance ?? 0)
         };
     }
 }

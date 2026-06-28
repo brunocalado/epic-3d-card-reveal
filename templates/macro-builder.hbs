@@ -121,6 +121,16 @@
             <p class="hint">{{fields.glowIntensity.hint}}</p>
         </div>
 
+        {{!-- Tarot-style reversed chance. Rendered as a 0–100 slider; 0 (the default) keeps the
+              feature off, so applyReversal bakes nothing into an untouched macro. --}}
+        <div class="form-group">
+            <label>{{fields.reversalChance.label}}</label>
+            <div class="form-fields">
+                <range-picker name="reversalChance" value="{{data.reversalChance}}" min="0" max="100" step="1"></range-picker>
+            </div>
+            <p class="hint">{{fields.reversalChance.hint}}</p>
+        </div>
+
         {{formGroup fields.faceDown value=data.faceDown}}
         {{formGroup fields.dramaticReveal value=data.dramaticReveal}}
 

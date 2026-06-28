@@ -36,14 +36,19 @@ export default function registerHooks() {
              * during which the card cannot be clicked open early.
              * The optional `glowColor` / `glowIntensity` keys theme the glow: `glowColor` is the hue and
              * `glowIntensity` (0..1) its strength (0 turns the glow off). Omit both to use the world default.
+             * The optional `reversalChance` (0..100) is the Tarot-style chance that each image is shown
+             * upside-down; 0 / omitted disables it and the orientation is re-rolled on every display.
              * Example: `EpicCards.Display({ front: img }).render(true);`
              */
-            Display({ front, back = null, cards = null, glowColor = null, glowIntensity, faceDown = true, sendToChat, sound, soundVolume, soundChannel, revealDelay } = {}) {
+            Display({ front, back = null, cards = null, glowColor = null, glowIntensity, faceDown = true, sendToChat, sound, soundVolume, soundChannel, revealDelay, reversalChance = 0 } = {}) {
+                // Roll the Tarot-style "reversed" flag per card, here on the originating client, so the
+                // same orientation is broadcast to everyone (rolling later, per-viewer, would desync).
+                const rollReversed = () => Math.random() * 100 < (reversalChance ?? 0);
                 // A non-empty `cards` array shows several cards; otherwise fall back to the single
                 // front/back pair so existing one-card callers keep working unchanged.
                 const imgArray = Array.isArray(cards) && cards.length
-                    ? cards.map(c => ({ front: c.front, back: c.back ?? null }))
-                    : [{ front, back }];
+                    ? cards.map(c => ({ front: c.front, back: c.back ?? null, reversed: rollReversed() }))
+                    : [{ front, back, reversed: rollReversed() }];
                 return new FancyDisplay({
                     imgArray,
                     glowColor,
@@ -69,10 +74,12 @@ export default function registerHooks() {
              * `sound` uses the world default (with `soundVolume`/`soundChannel` falling back too).
              * `revealDelay` (ms) overrides the dramatic-reveal wait; it applies only to dramatic-reveal
              * draws/views, during which a card cannot be clicked open early.
+             * The optional `reversalChance` (0..100) is the Tarot-style chance that each card this dealer
+             * shows is upside-down; 0 / omitted disables it and the orientation is re-rolled per display.
              * Example: `EpicCards.Dealer({ deckName, discardPileName }).draw({ share: true });`
              */
-            Dealer({ deckName, discardPileName, glowColor = null, glowIntensity, sound, soundVolume, soundChannel, revealDelay }) {
-                return new CardDealer({ deckName, discardPileName, glowColor, glowIntensity, sound, soundVolume, soundChannel, revealDelay });
+            Dealer({ deckName, discardPileName, glowColor = null, glowIntensity, sound, soundVolume, soundChannel, revealDelay, reversalChance = 0 }) {
+                return new CardDealer({ deckName, discardPileName, glowColor, glowIntensity, sound, soundVolume, soundChannel, revealDelay, reversalChance });
             },
 
             /**
@@ -149,21 +156,25 @@ function _onSocketMessage({ type, payload } = {}) {
  * @param {boolean} [options.faceDown=false]      Render face-down initially.
  * @param {boolean} [options.suppressChat=false]  Skip the chat preview. Used when re-opening
  *                                                a card from an existing chat message.
+ * @param {boolean} [options.reversed=false]      Show the card upside-down (Tarot-style). Carried
+ *                                                back from a chat re-open so the orientation matches
+ *                                                the published thumbnail; sidebar clicks leave it off.
  */
-function _viewCard(card, deckName, { faceDown = false, suppressChat = false } = {}) {
+function _viewCard(card, deckName, { faceDown = false, suppressChat = false, reversed = false } = {}) {
     const props = {
         id: card.id,
         name: card.faces[0].name,
         front: card.faces[0].img,
         back: card.back.img,
-        desc: card.faces[0].text
+        desc: card.faces[0].text,
+        reversed
     };
 
     // Deck/sidebar clicks have no per-call override, so they follow the world default.
     const sendToChat = resolveSendToChat();
 
     const postPreview = () =>
-        postCardToChat({ deckName, cardId: props.id, cardName: props.name, front: props.front, desc: props.desc, isPublic: false });
+        postCardToChat({ deckName, cardId: props.id, cardName: props.name, front: props.front, desc: props.desc, reversed: props.reversed, isPublic: false });
 
     new FancyDisplay({
         imgArray: [props],
@@ -239,10 +250,14 @@ function _registerCardImgClickInChat(html) {
         const container = img.closest(selector);
         if (!container) return;
 
+        // Re-open with the same orientation that was published, so a reversed thumbnail re-opens
+        // reversed (the flag was rolled once and stored on the message; it is not re-rolled here).
+        const reversed = container.dataset.reversed === "true";
+
         // Raw-image displays carry their image set inline; deck cards carry a deck/card reference.
         if (container.dataset.reopenKind === "image") {
             new FancyDisplay({
-                imgArray: [{ front: container.dataset.front, back: container.dataset.back || null }],
+                imgArray: [{ front: container.dataset.front, back: container.dataset.back || null, reversed }],
                 glowColor: container.dataset.glow || null,
                 glowIntensity: container.dataset.glowIntensity ? Number(container.dataset.glowIntensity) : undefined,
                 faceDown: container.dataset.faceDown === "true",
@@ -263,7 +278,7 @@ function _registerCardImgClickInChat(html) {
         }
 
         // Re-opening from chat must not post a second chat preview.
-        _viewCard(card, deckName, { suppressChat: true });
+        _viewCard(card, deckName, { suppressChat: true, reversed });
     });
     // TODO: drag-to-canvas support.
 }

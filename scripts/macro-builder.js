@@ -47,6 +47,15 @@ const BUILDER_SCHEMA = new fields.SchemaField({
         label: "Glow intensity",
         hint: "Strength of the card glow. 0 turns it off; higher is brighter and wider. Leave at the default to follow the module setting."
     }),
+    reversalChance: new fields.NumberField({
+        required: true,
+        integer: true,
+        min: 0,
+        max: 100,
+        initial: 0,
+        label: "Reversed chance (%)",
+        hint: "Chance that each card is shown upside-down, Tarot-style. 0 means cards are never reversed. Only the card's visual is flipped — its chat text is unchanged; the orientation is re-rolled every time."
+    }),
     faceDown: new fields.BooleanField({
         label: "Start face-down",
         hint: "Show the card back first."
@@ -201,6 +210,19 @@ function applyReveal(d, target) {
 }
 
 /**
+ * Fold the Tarot-style reversed chance into the target, but only when it is above 0 — an untouched
+ * form (0 = never reversed) bakes nothing, keeping the feature off by default.
+ * @param {object} d       The flat form data.
+ * @param {object} target  Object to receive the key (a `Display` opts object or a `Dealer` config).
+ * @returns {object} The same `target`, for chaining.
+ */
+function applyReversal(d, target) {
+    const chance = (d.reversalChance === "" || d.reversalChance == null) ? 0 : Number(d.reversalChance);
+    if (Number.isFinite(chance) && chance > 0) target.reversalChance = chance;
+    return target;
+}
+
+/**
  * Collect the shared appearance overrides, emitting only the keys the user actually filled so
  * the generated code (and the live preview) stays clean.
  * @param {object} d     The flat form data.
@@ -211,6 +233,7 @@ function applyAppearance(d, target) {
     applyGlow(d, target);
     applySound(d, target);
     applyReveal(d, target);
+    applyReversal(d, target);
     return target;
 }
 
@@ -475,6 +498,8 @@ export default class MacroBuilder extends foundry.applications.api.HandlebarsApp
                 quantity: 1,
                 glowColor: "",
                 glowIntensity: appearance.glowIntensity,
+                // Reversed is opt-in: start at 0 so an untouched form bakes nothing.
+                reversalChance: 0,
                 faceDown: false, dramaticReveal: false,
                 // Seed the delay from the world default so an untouched form bakes no override.
                 dramaticRevealDelay: appearance.dramaticRevealDelay,
