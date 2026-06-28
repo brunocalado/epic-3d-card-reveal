@@ -8,7 +8,7 @@ Drawing a card from the Deck of Many Things should be a *table-stopping event* â
 
 ![Preview](docs/preview.webp)
 
-![Preview 3 Cards](docs/preview-3cards.webp.webp)
+![Preview 3 Cards](docs/preview-3cards.webp)
 
 [![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-Donate-red?style=for-the-badge&logo=buy-me-a-coffee)](https://buymeacoffee.com/mestredigital)
 
