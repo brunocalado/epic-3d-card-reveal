@@ -106,6 +106,31 @@
         padding-inline-end: 0.4rem;
     }
 
+    /*
+     * Appearance panel: box each setting into its own card so the explanatory hint underneath
+     * stays visually tied to its control, instead of the whole list reading as one undivided
+     * wall of text where it's unclear which note belongs to which option. A raised fill plus a
+     * strong border maximise the separation; scoped to the appearance panel so the Options panel
+     * keeps its tighter fieldset layout. The toggle/select/slider settings here are each their own
+     * .form-group (the formGroup helper and the hand-built blocks both bundle label + fields + hint
+     * into one), so a single descendant rule covers them all — including those nested inside the
+     * collapsible data-sound-custom / data-reveal-extra / data-deck-only wrappers.
+     */
+    [data-tab-panel="appearance"] .form-group {
+        margin: 0 0 0.55rem;
+        padding: 0.55rem 0.7rem 0.6rem;
+        background: var(--epic-3d-card-reveal-surface-raised);
+        border: 1px solid var(--epic-3d-card-reveal-border-strong);
+        border-radius: 8px;
+    }
+
+    /* The hint now lives inside its setting's box; drop the trailing gap and lift it to full
+       contrast so the explanatory text reads clearly against the raised fill. */
+    [data-tab-panel="appearance"] .form-group .hint {
+        margin-block-end: 0;
+        opacity: 1;
+    }
+
     fieldset {
         margin-block-start: 0;
     }
