@@ -6,23 +6,6 @@
  * instead of an escaped class selector — same specificity, no escapes.
  */
 [class~="epic-3d-card-reveal"].card-macro-builder {
-    /*
-     * Fully opaque Macro Builder: base.css defines the shared surface/border/fill tokens as
-     * translucent white-over-dark rgba() values, which let the window content show through every
-     * panel, card and field. Here we redeclare each one as the same shade flattened to a solid
-     * color (its appearance over the dark window frame), so nothing in this window is see-through.
-     * This selector matches the same root element as base.css's [class~=...].application rule with
-     * equal specificity, and macro-builder.css loads later, so these win — and only for the Macro
-     * Builder. The Card Appearance app keeps the translucent tokens. accent/toggle-on are already
-     * opaque, so they're left to inherit from base.css.
-     */
-    --epic-3d-card-reveal-surface: #222226;
-    --epic-3d-card-reveal-surface-raised: #2d2d30;
-    --epic-3d-card-reveal-border: #343437;
-    --epic-3d-card-reveal-border-strong: #4b4b4e;
-    --epic-3d-card-reveal-accent-soft: #50432d;
-    --epic-3d-card-reveal-toggle-off: #464649;
-
     /* Square thumbnail button beside the macro name; clicking it opens the icon FilePicker. */
     .cmb-icon-pick {
         flex: 0 0 auto;
@@ -125,32 +108,15 @@
     }
 
     /*
-     * Appearance panel: box each setting into its own card so the explanatory hint underneath
-     * stays visually tied to its control, instead of the whole list reading as one undivided
-     * wall of text where it's unclear which note belongs to which option. A raised fill plus a
-     * strong border maximise the separation; scoped to the appearance panel so the Options panel
-     * keeps its tighter fieldset layout. The toggle/select/slider settings here are each their own
-     * .form-group (the formGroup helper and the hand-built blocks both bundle label + fields + hint
-     * into one), so a single descendant rule covers them all — including those nested inside the
-     * collapsible data-sound-custom / data-reveal-extra / data-deck-only wrappers.
+     * The boxed setting cards for the Appearance panel are defined once in base.css, shared with
+     * the Card Appearance and Reveal Sound forms for a consistent look.
      */
-    [data-tab-panel="appearance"] .form-group {
-        margin: 0 0 0.55rem;
-        padding: 0.55rem 0.7rem 0.6rem;
-        background: var(--epic-3d-card-reveal-surface-raised);
-        border: 1px solid var(--epic-3d-card-reveal-border-strong);
-        border-radius: 8px;
-    }
 
-    /* The hint now lives inside its setting's box; drop the trailing gap and lift it to full
-       contrast so the explanatory text reads clearly against the raised fill. */
-    [data-tab-panel="appearance"] .form-group .hint {
-        margin-block-end: 0;
-        opacity: 1;
-    }
-
+    /* Give the Options panel's three macro-type fieldsets the same near-black fill as the
+       Appearance cards, so both tabs share one look. */
     fieldset {
         margin-block-start: 0;
+        background: var(--epic-3d-card-reveal-field-bg);
     }
 
     /* Make the hand-built selects line up with the formGroup inputs. */

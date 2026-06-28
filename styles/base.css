@@ -17,17 +17,25 @@
  * only the module's own windows — never core sheets, and never the chat previews
  * above (those use the distinct `epic-3d-card-reveal-msg` token, which `[class~=]`
  * treats as a separate word). Design tokens live here once; the per-app stylesheets
- * (macro-builder.css, card-appearance-settings.css) consume them for a consistent look.
+ * (macro-builder.css, card-appearance-settings.css, reveal-sound-settings.css) consume them
+ * for a consistent look.
+ *
+ * The surface/border/fill tokens are fully opaque (solid shades, not translucent white-over-dark
+ * rgba), so none of the module's forms let the window content show through their panels, cards or
+ * fields, and the three config windows (Macro Builder, Card Appearance, Reveal Sound) read alike.
+ * card-viewer.css / chat-card.css don't consume these tokens, so they're unaffected.
  */
 [class~="epic-3d-card-reveal"].application {
-    --epic-3d-card-reveal-surface: rgba(255, 255, 255, 0.045);
-    --epic-3d-card-reveal-surface-raised: rgba(255, 255, 255, 0.09);
-    --epic-3d-card-reveal-border: rgba(255, 255, 255, 0.12);
-    --epic-3d-card-reveal-border-strong: rgba(255, 255, 255, 0.22);
+    --epic-3d-card-reveal-surface: #222226;
+    --epic-3d-card-reveal-surface-raised: #2d2d30;
+    --epic-3d-card-reveal-border: #343437;
+    --epic-3d-card-reveal-border-strong: #4b4b4e;
     --epic-3d-card-reveal-accent: #e0b25a;
-    --epic-3d-card-reveal-accent-soft: rgba(224, 178, 90, 0.28);
-    --epic-3d-card-reveal-toggle-off: rgba(255, 255, 255, 0.2);
+    --epic-3d-card-reveal-accent-soft: #50432d;
+    --epic-3d-card-reveal-toggle-off: #464649;
     --epic-3d-card-reveal-toggle-on: #4caf72;
+    /* Near-black fill for the boxed setting cards, deliberately darker than the window frame. */
+    --epic-3d-card-reveal-field-bg: #0a0a0b;
 
     /* Legibility is the priority: lift labels, legends and hints off the dark frame. */
     label {
@@ -141,4 +149,49 @@
     .form-footer button:active {
         transform: translateY(1px);
     }
+}
+
+/*
+ * Boxed setting cards — the shared visual language across all three config windows. Each setting
+ * (its label + fields + explanatory hint) is wrapped in its own near-black card with a strong
+ * border, so every control reads as one unit instead of the list blurring into a single wall of
+ * text, and so the windows look identical.
+ *
+ * This must be a top-level rule (not nested in the `.application` block above) because it keys off
+ * each window's own root class to box exactly the right groups:
+ *   - Macro Builder: only the Appearance panel's groups — the header (name/type) and the Options
+ *     panel keep their tighter layout, so we target `[data-tab-panel="appearance"]`.
+ *   - Card Appearance / Reveal Sound: every group in the form, all under `.standard-form`.
+ * A single descendant `.form-group` selector also catches the groups nested inside the Macro
+ * Builder's collapsible data-sound-custom / data-reveal-extra / data-deck-only wrappers.
+ */
+[class~="epic-3d-card-reveal"].card-macro-builder [data-tab-panel="appearance"] .form-group,
+[class~="epic-3d-card-reveal"].card-appearance-settings .standard-form .form-group,
+[class~="epic-3d-card-reveal"].reveal-sound-settings .standard-form .form-group {
+    margin: 0 0 0.55rem;
+    padding: 0.55rem 0.7rem 0.6rem;
+    background: var(--epic-3d-card-reveal-field-bg);
+    border: 1px solid var(--epic-3d-card-reveal-border-strong);
+    border-radius: 8px;
+}
+
+/* The hint now lives inside its setting's box: drop its trailing gap and lift it to full contrast
+   so the explanatory text reads clearly against the dark fill. */
+[class~="epic-3d-card-reveal"].card-macro-builder [data-tab-panel="appearance"] .form-group .hint,
+[class~="epic-3d-card-reveal"].card-appearance-settings .standard-form .form-group .hint,
+[class~="epic-3d-card-reveal"].reveal-sound-settings .standard-form .form-group .hint {
+    margin-block-end: 0;
+    opacity: 1;
+}
+
+/*
+ * Match the Macro Builder's tighter card spacing. There the boxed groups sit inside the scrolling
+ * `.cmb-panel`, so the only gap between them is the card's own 0.55rem margin. In these two forms
+ * the groups are direct children of `.standard-form`, which adds core's flex `gap` on top — making
+ * the spacing read as too large. Drop that gap so the card margin alone drives the rhythm. (Their
+ * footer lives outside `.standard-form`, so this only affects the spacing between cards.)
+ */
+[class~="epic-3d-card-reveal"].card-appearance-settings .standard-form,
+[class~="epic-3d-card-reveal"].reveal-sound-settings .standard-form {
+    gap: 0;
 }

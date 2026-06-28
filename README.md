@@ -2,9 +2,13 @@
 
 **A Foundry VTT module that makes every card draw feel like a moment**
 
+> 🌐 [Leia em Português do Brasil](docs/README-ptbr.md)
+
 Drawing a card from the Deck of Many Things should be a *table-stopping event* — not a tiny thumbnail in a sidebar. **Epic 3D Card Reveal** turns every card into a gorgeous full-screen showpiece: the card floats in front of a dimmed screen, tilts in 3D as you move your mouse, catches the light with a subtle glint, and flips over with a satisfying animation — complete with a triumphant chime — when you click it.
 
 ![Preview](docs/preview.webp)
+
+![Preview 3 Cards](docs/preview-3cards.webp.webp)
 
 [![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-Donate-red?style=for-the-badge&logo=buy-me-a-coffee)](https://buymeacoffee.com/mestredigital)
 
@@ -110,3 +114,4 @@ https://github.com/brunocalado/epic-3d-card-reveal/issues
 - Released under the [LICENSE](LICENSE).
 - This module is a fork/rewrite of [orcnog-card-viewer](https://github.com/orcnog/orcnog-card-viewer), which took its visual inspiration from a popular 5e toolset.
 - [reveal.ogg](https://pixabay.com/sound-effects/musical-victory-chime-366449/)
+- [demo-card.webp and demo-card-back.webp](https://pixabay.com/illustrations/lion-wild-animal-abstract-1015153/)
