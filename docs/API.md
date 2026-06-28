@@ -195,12 +195,12 @@ The Appearance tab also shows a **Send card description** toggle, but only for t
 
 # Macro example
 
-Want to write one by hand instead? The module ships no macro compendium; copy this straight into a world macro.
+Want to write one by hand instead? The module ships **no compendium packs** — no macros, decks, or anything else. The only place generated macros live is the `3D Card Macros` folder the macro builder creates in your world's Macro directory. To write one yourself, just copy a snippet below straight into a world macro.
 
 ## View any image as a card
 
 ```js
-const img = 'modules/epic-3d-card-reveal/assets/beefy-abraham-lincoln.webp';
+const img = 'modules/epic-3d-card-reveal/assets/demo-card-back.webp';
 const backImg = 'https://i.imgur.com/mStOCso.png'; // optional
 const glowColor = 'rgba(200,200,255,0.4)';         // optional
 const shareToAll = true;                           // optional
