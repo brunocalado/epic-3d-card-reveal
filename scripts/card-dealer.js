@@ -1,5 +1,5 @@
 import { MODULE_ID } from "./constants.js";
-import { postCardToChat, postChatAfterReveal, resolveSendToChat } from "./helpers.js";
+import { postCardToChat, postChatAfterReveal, resolveSendToChat, resolveShowDescription } from "./helpers.js";
 import FancyDisplay from "./fancy-display.js";
 
 /**
@@ -92,8 +92,10 @@ export default class CardDealer {
      * @param {"up"|"down"|"reveal"} [options.face]  Force a specific face / reveal behavior, overriding the source face.
      * @param {boolean} [options.sendToChat]     Whether to post a clickable chat message that re-opens each card.
      *                                           Omit to follow the world default.
+     * @param {boolean} [options.showDescription]  Whether the chat message includes the card's description.
+     *                                             Omit to follow the world default.
      */
-    async draw({ quantity = 1, share = true, face, sendToChat } = {}) {
+    async draw({ quantity = 1, share = true, face, sendToChat, showDescription } = {}) {
         let deckName, deck, pile;
         try {
             await this.initPromise;
@@ -144,12 +146,13 @@ export default class CardDealer {
 
             const drawnArray = drawnCards.map(c => this._extractCardProperties(c));
             const post = resolveSendToChat(sendToChat);
+            const showDesc = resolveShowDescription(showDescription);
 
             // Drawn cards land in chat (when enabled): publicly when shared with everyone, otherwise
             // as a GM whisper so the GM can re-open them later.
             const postPreviews = () => {
                 for (const { id, name, front, desc, reversed } of drawnArray) {
-                    postCardToChat({ deckName, cardId: id, cardName: name, front, desc, reversed, isPublic: share });
+                    postCardToChat({ deckName, cardId: id, cardName: name, front, desc, reversed, isPublic: share, showDescription: showDesc });
                 }
             };
 
@@ -159,7 +162,9 @@ export default class CardDealer {
                 glowIntensity: this.glowIntensity,
                 faceDown,
                 sendToChat: post,
-                chatMeta: { deckName, cards: drawnArray },
+                // Carry the resolved flag so a later eye-button share (CardViewerApp#_onShare) posts
+                // the description consistently with this draw.
+                chatMeta: { deckName, cards: drawnArray, showDescription: showDesc },
                 sound: this.sound,
                 soundVolume: this.soundVolume,
                 soundChannel: this.soundChannel,
@@ -190,8 +195,10 @@ export default class CardDealer {
      *                                                a card from an existing chat message.
      * @param {boolean} [options.sendToChat]          Whether to post a clickable chat message that
      *                                                re-opens each card. Omit to follow the world default.
+     * @param {boolean} [options.showDescription]     Whether the chat message includes the card's
+     *                                                description. Omit to follow the world default.
      */
-    async view(cards, faceDown, dramaticReveal, share, { suppressChat = false, sendToChat } = {}) {
+    async view(cards, faceDown, dramaticReveal, share, { suppressChat = false, sendToChat, showDescription } = {}) {
         try {
             const { deckName } = this;
             const cardsArray = Array.isArray(cards) ? cards : [cards];
@@ -212,12 +219,13 @@ export default class CardDealer {
             }
             if (!cardDataArray.length) return;
             const post = resolveSendToChat(sendToChat);
+            const showDesc = resolveShowDescription(showDescription);
             // A face-down view with no dramatic auto-reveal waits for a manual flip in the viewer.
             const manualReveal = !!faceDown && !dramaticReveal;
 
             const postPreviews = () => {
                 for (const { id, name, front, desc, reversed } of cardDataArray) {
-                    postCardToChat({ deckName, cardId: id, cardName: name, front, desc, reversed, isPublic: share });
+                    postCardToChat({ deckName, cardId: id, cardName: name, front, desc, reversed, isPublic: share, showDescription: showDesc });
                 }
             };
 
@@ -227,7 +235,8 @@ export default class CardDealer {
                 glowIntensity: this.glowIntensity,
                 faceDown,
                 sendToChat: post,
-                chatMeta: { deckName, cards: cardDataArray },
+                // Carry the resolved flag so a later eye-button share posts the description consistently.
+                chatMeta: { deckName, cards: cardDataArray, showDescription: showDesc },
                 sound: this.sound,
                 soundVolume: this.soundVolume,
                 soundChannel: this.soundChannel,
@@ -326,7 +335,10 @@ export default class CardDealer {
             name: card.faces[0].name,
             front: card.faces[0].img,
             back: card.back.img,
-            desc: card.faces[0].text,
+            // The Card document's own description (where decks like the PF2e Harrow keep their
+            // lore), not the per-face text. Only posted to chat when the SHOW_DESCRIPTION setting
+            // is on; gated and enriched in postCardToChat.
+            desc: card.description,
             faceDown: true,
             reversed: Math.random() * 100 < (this.reversalChance ?? 0)
         };

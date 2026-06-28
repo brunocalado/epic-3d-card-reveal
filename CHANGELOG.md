@@ -1,3 +1,9 @@
+# 0.0.3
+
+- https://github.com/brunocalado/epic-3d-card-reveal/issues/1
+- Added a **Send card description to chat** world setting (off by default). When enabled, the chat reveal also shows the card's description — pulled from the Card document's own description field, so lore-heavy decks like the **PF2e Harrow Deck** post their card text alongside the image. Rich text and `@UUID` links are rendered, not shown as raw markup. Cards with no description, and arbitrary images shown through the API, are unchanged.
+- The description can also be toggled per macro: `Dealer.draw` / `Dealer.view` accept a `showDescription` override, and the **Macro Builder** shows a matching **Send card description** control for deck-based macro types (Draw / View).
+
 # 0.0.2
 
 - https://github.com/brunocalado/epic-3d-card-reveal/issues/2

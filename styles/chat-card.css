@@ -121,6 +121,11 @@
     .epic-3d-card-reveal-chat-desc {
         color: rgb(255 255 255 / 90%) !important;
         font-family: var(--font-primary) !important;
-        text-align: center !important;
+        /* Left-align enriched rich text (lore can run several paragraphs) and cap the height so a
+           long Harrow description scrolls inside the card instead of stretching the chat log. */
+        text-align: left !important;
+        width: 100% !important;
+        max-height: 220px !important;
+        overflow-y: auto !important;
     }
 }

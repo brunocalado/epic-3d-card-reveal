@@ -12,6 +12,15 @@ The global is assigned during the `ready` hook; the API object itself exists fro
 - Re-opening a card from a chat thumbnail never posts a second message.
 - **All chat messages share one card style** (accent border, dark header, no background image), produced by a single `buildChatCard` helper.
 
+### Card descriptions
+
+A **Send card description to chat** world setting (Configure Settings → Module Settings) adds the card's description to the chat preview. It is **off by default**, so existing previews (image + name only) are unchanged until you enable it.
+
+- The text comes from the **Card document's own description** field — the same place lore decks such as the **PF2e Harrow Deck** store their card text. (It is not the per-face text.)
+- The description is **enriched** before posting (`TextEditor.enrichHTML`), so `@UUID` links, formatting, and inline rolls render instead of appearing as raw markup.
+- Only **deck cards** can carry a description. Cards with an empty description, and arbitrary images shown through `Display` (which have no backing Card document), post exactly as they do today.
+- The setting is the default for every chat path (deck/sidebar clicks, `Dealer.draw`, `Dealer.view`). `Dealer.draw` and `Dealer.view` accept an optional **`showDescription`** boolean that overrides it per call (omit to follow the world default); the macro builder bakes this choice for deck macros (see below).
+
 ### `sendToChat`
 
 Every entry point accepts an optional `sendToChat` boolean.
@@ -141,6 +150,7 @@ Draws random cards from the deck into the discard pile, displays them in the vie
 | `share` | `boolean` (optional) | Broadcast the view to all clients. Default `true`. |
 | `face` | `"up"\|"down"\|"reveal"` (optional) | Force the initial face, overriding each card's source face. `"reveal"` renders face-down then auto-flips after the dramatic-reveal delay, and cannot be clicked open early. |
 | `sendToChat` | `boolean` (optional) | Post a clickable chat message that re-opens each card. Omit to use the world default. |
+| `showDescription` | `boolean` (optional) | Include the card's description in the chat message. Omit to use the world default ([Card descriptions](#card-descriptions)). |
 
 #### `.view(cards, faceDown, dramaticReveal, share, options)`
 Displays one or more **existing** cards (no draw side effect) and posts the chat preview once the cards are revealed (see [`sendToChat`](#sendtochat) for the timing of face-down/dramatic views).
@@ -151,7 +161,7 @@ Displays one or more **existing** cards (no draw side effect) and posts the chat
 | `faceDown` | `boolean` | Render face-down initially. |
 | `dramaticReveal` | `boolean` | Render face-down, then auto-flip after the configured delay; the card cannot be clicked open early. |
 | `share` | `boolean` | Broadcast the view to all clients. |
-| `options` | `object` (optional) | `{ sendToChat }` — post a clickable chat message that re-opens each card. Omit to use the world default. |
+| `options` | `object` (optional) | `{ sendToChat, showDescription }` — post a clickable chat message that re-opens each card, and whether that message includes the card's description. Omit either to use its world default. |
 
 ### Example
 ```js
@@ -180,6 +190,8 @@ Both open the same form and are GM-only. Generated macros land in the `3D Card M
 The Appearance tab also exposes the **Dramatic reveal** toggle; enabling it forces **Start face-down** on and reveals a **Dramatic reveal delay (ms)** field (seeded from the world default), baked into the generated macro as `revealDelay`. During a dramatic reveal the card cannot be clicked open early — every viewer waits out the delay — and the wait is synchronized to all players when the card is shared.
 
 The Appearance tab's **Reversed chance** slider sets `reversalChance` (`0`–`100`) on the generated macro; left at `0` it bakes nothing, so cards are never reversed unless you raise it. See [Reversed cards](#reversed-cards-tarot-style).
+
+The Appearance tab also shows a **Send card description** toggle, but only for the deck-backed macro types (**Draw from a deck** and **View specific cards**) — Display-image macros have no card description, so it is hidden for them. It is seeded from the world setting and baked onto the generated macro as `showDescription`. See [Card descriptions](#card-descriptions).
 
 # Macro example
 

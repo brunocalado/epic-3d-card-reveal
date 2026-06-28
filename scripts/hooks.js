@@ -166,7 +166,8 @@ function _viewCard(card, deckName, { faceDown = false, suppressChat = false, rev
         name: card.faces[0].name,
         front: card.faces[0].img,
         back: card.back.img,
-        desc: card.faces[0].text,
+        // The Card document's description (e.g. Harrow lore), gated/enriched in postCardToChat.
+        desc: card.description,
         reversed
     };
 

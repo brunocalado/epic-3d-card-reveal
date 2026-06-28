@@ -33,6 +33,19 @@ export function resolveSendToChat(value) {
 }
 
 /**
+ * Resolve the effective `showDescription` flag for a chat post. An explicit boolean wins;
+ * `undefined` falls back to the world-level default setting. Mirrors {@link resolveSendToChat} so
+ * the deck/draw/view paths and the macro builder honor the same default while still allowing a
+ * per-call override.
+ *
+ * @param {boolean} [value]  Per-call override, or undefined to use the world default.
+ * @returns {boolean} Whether the card's description should be included in the chat post.
+ */
+export function resolveShowDescription(value) {
+    return value ?? game.settings.get(MODULE_ID, SETTINGS.SHOW_DESCRIPTION);
+}
+
+/**
  * Run a chat-posting callback, but hold it until a dramatic reveal has flipped the cards. The chat
  * preview shows the card front, which would spoil a dramatic reveal that is still counting down, so
  * when `dramaticReveal` is set the post is deferred by the reveal delay; otherwise it posts now.
@@ -140,16 +153,25 @@ function _reopenBody(front, alt, dataAttrs, reversed = false) {
  * @param {string} opts.cardId             Card document id.
  * @param {string} opts.cardName           Display name of the card (used as the card title).
  * @param {string} opts.front              Front image path.
- * @param {string} [opts.desc]             Card description (rich text).
+ * @param {string} [opts.desc]             Card description (rich text). Posted only when description
+ *                                         display is on (per-call override or the SHOW_DESCRIPTION
+ *                                         world setting), and enriched first so links/formatting render.
  * @param {boolean} [opts.reversed=false]  Show the card upside-down (Tarot-style) in the preview, and
  *                                         store the orientation on the message so a re-open matches it.
  * @param {boolean} [opts.isPublic=false]  Post publicly instead of whispering the GM.
+ * @param {boolean} [opts.showDescription] Per-call override for including the description; omit to
+ *                                         follow the world default (see {@link resolveShowDescription}).
  * @returns {Promise<ChatMessage|undefined>} The created message, or undefined when no GM is available to whisper.
  */
-export async function postCardToChat({ deckName, cardId, cardName, front, desc, reversed = false, isPublic = false }) {
+export async function postCardToChat({ deckName, cardId, cardName, front, desc, reversed = false, isPublic = false, showDescription } = {}) {
     const dataAttrs = `data-reopen-kind="card" data-deck="${escapeHtmlAttr(deckName)}" data-card="${escapeHtmlAttr(cardId)}" data-reversed="${!!reversed}"`;
     let body = _reopenBody(front, cardName, dataAttrs, reversed);
-    if (desc) body += `<div class="${MODULE_ID}-chat-desc">${desc}</div>`;
+    if (desc && resolveShowDescription(showDescription)) {
+        // Card descriptions are rich text (HTMLField): enrich so @UUID links, formatting, and
+        // inline rolls render instead of appearing as raw markup. Uses the v14 namespaced editor.
+        const enriched = await foundry.applications.ux.TextEditor.implementation.enrichHTML(desc);
+        body += `<div class="${MODULE_ID}-chat-desc">${enriched}</div>`;
+    }
 
     return _postChat(buildChatCard(cardName, body), isPublic);
 }

@@ -235,7 +235,7 @@ class CardViewerApp extends foundry.applications.api.HandlebarsApplicationMixin(
             // doesn't spoil the front before everyone's viewer has flipped.
             postChatAfterReveal(this._revealLocked, this.revealDelay, () => {
                 for (const { id, name, front, desc, reversed } of this.chatMeta.cards) {
-                    postCardToChat({ deckName: this.chatMeta.deckName, cardId: id, cardName: name, front, desc, reversed, isPublic: true });
+                    postCardToChat({ deckName: this.chatMeta.deckName, cardId: id, cardName: name, front, desc, reversed, isPublic: true, showDescription: this.chatMeta.showDescription });
                 }
             });
         }

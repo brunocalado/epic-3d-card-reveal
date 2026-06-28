@@ -82,6 +82,12 @@ const BUILDER_SCHEMA = new fields.SchemaField({
         label: "Send to chat",
         hint: "Post a clickable chat message so the card can be re-opened later (e.g. if closed by accident)."
     }),
+    // Deck-only: only deck cards (Draw / View) carry a description; Display images have none. The
+    // template hides this control for the Display type (see MacroBuilder#initTypeToggle).
+    showDescription: new fields.BooleanField({
+        label: "Send card description",
+        hint: "Include the card's description (e.g. PF2e Harrow lore) in the chat message. Only applies when Send to chat is on."
+    }),
     // Reveal sound override. The flat `soundMode` select (default/custom/none) decides whether these
     // are baked; see {@link applySound}. The schema is only used to render widgets and labels.
     sound: new fields.FilePathField({
@@ -292,7 +298,7 @@ function drawArgs(d) {
     const dealer = { deckName: d.drawDeck };
     if (d.drawDiscardPile) dealer.discardPileName = d.drawDiscardPile;
     applyAppearance(d, dealer);
-    const draw = { quantity: Number(d.quantity) || 1, face: deriveFace(d), share: !!d.share, sendToChat: !!d.sendToChat };
+    const draw = { quantity: Number(d.quantity) || 1, face: deriveFace(d), share: !!d.share, sendToChat: !!d.sendToChat, showDescription: !!d.showDescription };
     return { dealer, draw };
 }
 
@@ -323,7 +329,7 @@ function readViewCards(d) {
  * Distil the form data into `EpicCards.Dealer(...).view(...)` arguments. The cards come from one
  * or more Cards dragged onto the drop zone, so any number of cards can be viewed at once.
  * @param {object} d  The flat form data.
- * @returns {{dealer: object, cards: string[], faceDown: boolean, reveal: boolean, share: boolean, sendToChat: boolean}}
+ * @returns {{dealer: object, cards: string[], faceDown: boolean, reveal: boolean, share: boolean, sendToChat: boolean, showDescription: boolean}}
  */
 function viewArgs(d) {
     const list = readViewCards(d);
@@ -332,7 +338,7 @@ function viewArgs(d) {
     const dealer = applyAppearance(d, { deckName: list[0]?.deck ?? "" });
     // A dramatic reveal always starts face-down (its disabled checkbox can't report it), so force it.
     const faceDown = !!d.faceDown || !!d.dramaticReveal;
-    return { dealer, cards: list.map(c => c.id), faceDown, reveal: !!d.dramaticReveal, share: !!d.share, sendToChat: !!d.sendToChat };
+    return { dealer, cards: list.map(c => c.id), faceDown, reveal: !!d.dramaticReveal, share: !!d.share, sendToChat: !!d.sendToChat, showDescription: !!d.showDescription };
 }
 
 /**
@@ -340,8 +346,8 @@ function viewArgs(d) {
  * @returns {string}  Executable macro script.
  */
 function buildViewCommand(d) {
-    const { dealer, cards, faceDown, reveal, share, sendToChat } = viewArgs(d);
-    return `EpicCards.Dealer(${JSON.stringify(dealer, null, 2)}).view(${JSON.stringify(cards)}, ${faceDown}, ${reveal}, ${share}, ${JSON.stringify({ sendToChat })});`;
+    const { dealer, cards, faceDown, reveal, share, sendToChat, showDescription } = viewArgs(d);
+    return `EpicCards.Dealer(${JSON.stringify(dealer, null, 2)}).view(${JSON.stringify(cards)}, ${faceDown}, ${reveal}, ${share}, ${JSON.stringify({ sendToChat, showDescription })});`;
 }
 
 /**
@@ -378,8 +384,8 @@ function runPreview(type, d) {
             return api.Dealer(dealer).draw(draw);
         }
         case "view": {
-            const { dealer, cards, faceDown, reveal, share, sendToChat } = viewArgs(d);
-            return api.Dealer(dealer).view(cards, faceDown, reveal, share, { sendToChat });
+            const { dealer, cards, faceDown, reveal, share, sendToChat, showDescription } = viewArgs(d);
+            return api.Dealer(dealer).view(cards, faceDown, reveal, share, { sendToChat, showDescription });
         }
         default: return undefined;
     }
@@ -506,6 +512,8 @@ export default class MacroBuilder extends foundry.applications.api.HandlebarsApp
                 share: true,
                 // Seed from the world default so an untouched form bakes the current setting.
                 sendToChat: game.settings.get(MODULE_ID, SETTINGS.SEND_TO_CHAT),
+                // Deck-only; seed from the world default so it matches the current setting.
+                showDescription: game.settings.get(MODULE_ID, SETTINGS.SHOW_DESCRIPTION),
                 // Reveal sound starts on "use module default"; the custom controls seed from the
                 // world reveal-sound setting so switching to Custom shows the current values.
                 soundMode: "default",
@@ -557,11 +565,16 @@ export default class MacroBuilder extends foundry.applications.api.HandlebarsApp
         const typeSelect = this.element.querySelector('select[name="macroType"]');
         if (!typeSelect) return;
         const sections = this.element.querySelectorAll("[data-macro-section]");
+        // Controls that only make sense for deck-backed cards (Draw / View), e.g. the card
+        // description toggle. Hidden for the deckless Display type.
+        const deckOnly = this.element.querySelectorAll("[data-deck-only]");
 
         const sync = () => {
             for (const section of sections) {
                 section.hidden = section.dataset.macroSection !== typeSelect.value;
             }
+            const usesDeck = typeSelect.value === "draw" || typeSelect.value === "view";
+            for (const el of deckOnly) el.hidden = !usesDeck;
             this.setPosition({ height: "auto" });
         };
 

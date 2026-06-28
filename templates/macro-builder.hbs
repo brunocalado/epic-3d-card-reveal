@@ -145,6 +145,13 @@
         {{formGroup fields.share value=data.share}}
         {{formGroup fields.sendToChat value=data.sendToChat}}
 
+        {{!-- Deck-only: only deck cards (Draw / View) have a description to post. #initTypeToggle
+              hides this for the deckless Display type. The input stays in the DOM while hidden but
+              is ignored by displayArgs, so it never affects a Display macro. --}}
+        <div data-deck-only>
+            {{formGroup fields.showDescription value=data.showDescription}}
+        </div>
+
         {{!-- Reveal sound. The soundMode select toggles the [data-sound-custom] block (handled in
               _onRender). Hidden custom inputs still submit, but applySound only reads them in Custom
               mode, so Default bakes nothing and None bakes an explicit silent override. --}}

@@ -10,6 +10,7 @@ export const MODULE_ID = "epic-3d-card-reveal";
 export const SETTINGS = {
     ENABLE_CARD_ICON_CLICK: "enableCardIconClick",
     SEND_TO_CHAT: "sendToChat",
+    SHOW_DESCRIPTION: "showCardDescription",
     CARD_APPEARANCE: "cardAppearance",
     CARD_APPEARANCE_MENU: "cardAppearanceMenu",
     REVEAL_SOUND: "revealSound",

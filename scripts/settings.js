@@ -28,6 +28,19 @@ export function registerSettings() {
         type: Boolean
     });
 
+    // Off by default so existing worlds keep their current chat previews (image + name only).
+    // When enabled, the chat reveal also carries the Card document's description — handy for
+    // lore-heavy decks such as the PF2e Harrow Deck. Empty descriptions and raw Display images
+    // (which have no Card document) are unaffected.
+    game.settings.register(MODULE_ID, SETTINGS.SHOW_DESCRIPTION, {
+        name: "Send card description to chat",
+        hint: "When enabled, the chat reveal also shows the card's description (e.g. the lore on a PF2e Harrow card). Rich text and links are rendered. Cards with no description, and arbitrary images shown via the API, are unaffected.",
+        scope: "world",
+        config: true,
+        default: false,
+        type: Boolean
+    });
+
     // Hidden storage for the appearance defaults; edited through the menu registered below.
     game.settings.register(MODULE_ID, SETTINGS.CARD_APPEARANCE, {
         scope: "world",

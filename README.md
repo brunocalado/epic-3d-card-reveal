@@ -39,6 +39,7 @@ That's it. No configuration needed — it looks great out of the box.
 |---|---|---|
 | 🖱️ Enable clickable card icons | On | Makes card thumbnails in the sidebar, deck windows, and chat open the 3D viewer. |
 | 💬 Send revealed cards to chat | On | Posts a clickable card preview to chat — whispered to the GM when a card is viewed privately, public when it's shared. |
+| 📜 Send card description to chat | Off | Adds the card's description to the chat preview — perfect for lore decks like the PF2e Harrow Deck. Reads the Card's own description field and renders its rich text and links. Cards with no description (and plain images shown via the API) are unaffected. |
 
 The three menus below are GM-only and let you set the defaults for your whole world:
 
@@ -69,6 +70,7 @@ Not a coder? Click **Open Macro Builder** to fill in a simple form and get a rea
 - 👁️‍🗨️ **View a card privately** → a preview is whispered to the GM, so the GM always knows what was drawn and can re-open it anytime.
 - 📢 **Share a card with everyone** → the preview is posted publicly in chat, so any player can click it later to view the card again on their own screen.
 - 🙈 **Face-down stays secret** → a card shown face-down isn't posted to chat until you flip it face-up (or it auto-flips during a dramatic reveal), so the front never appears in chat before the reveal.
+- 📜 **Card lore in chat (optional)** → turn on **Send card description to chat** and the preview also carries the card's description — its rich text and links rendered in place. Great for decks like the PF2e Harrow, where every card tells a story.
 
 ## 🧙 For macro and module authors
 
