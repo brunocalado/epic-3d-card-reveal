@@ -1,6 +1,7 @@
 # 0.0.4
 
 - Polished the **Macro Builder**'s *Appearance* tab for readability: each setting is now boxed into its own card with a raised fill and a clear border, so every control and its explanatory note read as one unit instead of blurring into a single wall of text. Hints sit at full contrast inside their box, and the redundant "These settings apply to every macro type" line was removed.
+- Made the **Macro Builder** fully opaque: its panels, setting cards, fields and tabs no longer use translucent fills, so the window content no longer shows through them.
 
 # 0.0.3
 

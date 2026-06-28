@@ -6,6 +6,23 @@
  * instead of an escaped class selector — same specificity, no escapes.
  */
 [class~="epic-3d-card-reveal"].card-macro-builder {
+    /*
+     * Fully opaque Macro Builder: base.css defines the shared surface/border/fill tokens as
+     * translucent white-over-dark rgba() values, which let the window content show through every
+     * panel, card and field. Here we redeclare each one as the same shade flattened to a solid
+     * color (its appearance over the dark window frame), so nothing in this window is see-through.
+     * This selector matches the same root element as base.css's [class~=...].application rule with
+     * equal specificity, and macro-builder.css loads later, so these win — and only for the Macro
+     * Builder. The Card Appearance app keeps the translucent tokens. accent/toggle-on are already
+     * opaque, so they're left to inherit from base.css.
+     */
+    --epic-3d-card-reveal-surface: #222226;
+    --epic-3d-card-reveal-surface-raised: #2d2d30;
+    --epic-3d-card-reveal-border: #343437;
+    --epic-3d-card-reveal-border-strong: #4b4b4e;
+    --epic-3d-card-reveal-accent-soft: #50432d;
+    --epic-3d-card-reveal-toggle-off: #464649;
+
     /* Square thumbnail button beside the macro name; clicking it opens the icon FilePicker. */
     .cmb-icon-pick {
         flex: 0 0 auto;
@@ -70,7 +87,8 @@
         }
 
         &.active {
-            background: linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.08));
+            /* Opaque equivalent of the former translucent white-over-dark gradient. */
+            background: linear-gradient(180deg, #38383c, #2b2b2e);
             border-color: var(--epic-3d-card-reveal-border-strong);
             color: var(--color-text-emphatic, #fff);
             font-weight: 700;
