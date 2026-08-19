@@ -1,10 +1,7 @@
 {
   "id": "epic-3d-card-reveal",
   "title": "Epic 3D Card Reveal",
-  "description": "",
-
-  "version": "0.0.6",
-
+  "version": "0.0.7",
   "authors": [
     {
       "name": "Mestre Digital",
@@ -12,29 +9,38 @@
       "flags": {}
     }
   ],
-  
   "compatibility": {
     "minimum": "14",
-    "verified": "14"
+    "verified": "14",
+    "maximum": "14"
   },
-
   "esmodules": [
     "scripts/init.js"
   ],
-  
   "styles": [
-    "styles/base.css",
-    "styles/chat-card.css",
-    "styles/card-viewer.css",
-    "styles/card-appearance-settings.css",
-    "styles/reveal-sound-settings.css",
-    "styles/macro-builder.css"
+    {
+      "src": "styles/base.css"
+    },
+    {
+      "src": "styles/chat-card.css"
+    },
+    {
+      "src": "styles/card-viewer.css"
+    },
+    {
+      "src": "styles/card-appearance-settings.css"
+    },
+    {
+      "src": "styles/reveal-sound-settings.css"
+    },
+    {
+      "src": "styles/macro-builder.css"
+    }
   ],
-
   "socket": true,
-
   "url": "https://github.com/brunocalado/epic-3d-card-reveal",
   "manifest": "https://raw.githubusercontent.com/brunocalado/epic-3d-card-reveal/main/module.json",
-  "download": "https://codeload.github.com/brunocalado/epic-3d-card-reveal/zip/main"
-
+  "download": "https://codeload.github.com/brunocalado/epic-3d-card-reveal/zip/main",
+  "description": "",
+  "flags": {}
 }

@@ -6,11 +6,9 @@
 
 Drawing a card from the Deck of Many Things should be a *table-stopping event* — not a tiny thumbnail in a sidebar. **Epic 3D Card Reveal** turns every card into a gorgeous full-screen showpiece: the card floats in front of a dimmed screen, tilts in 3D as you move your mouse, catches the light with a subtle glint, and flips over with a satisfying animation — complete with a triumphant chime — when you click it.
 
-![Preview](docs/preview.webp)
-
 ![Preview 3 Cards](docs/preview-3cards.webp)
 
-[![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-Donate-red?style=for-the-badge&logo=buy-me-a-coffee)](https://buymeacoffee.com/mestredigital)
+[![Buy Me a Coffee](https://img.shields.io/badge/Buy_Me_a_Coffee-Donate-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/mestredigital) [![More Modules](https://img.shields.io/badge/Foundry%20VTT-More%20Modules-red?style=for-the-badge&logo=gamepad)](https://mestredigital.online/pages/projetos-en)
 
 ## ✨ What it does
 
