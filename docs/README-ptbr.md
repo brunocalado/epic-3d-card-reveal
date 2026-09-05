@@ -81,7 +81,7 @@ Não é programador? Clique em **Abrir Construtor de Macros** para preencher um 
 Quer mostrar qualquer imagem como uma linda carta 3D a partir de uma macro, ou construir sobre o visualizador? O visualizador é programável através do objeto global `EpicCards`.
 
 - 🖼️ **`EpicCards.Display(...)`** — o recurso principal: renderiza *qualquer* imagem com a apresentação 3D animada.
-- 🃏 **`EpicCards.Dealer(...)`** — um auxiliar opcional para quando você está trabalhando com baralhos de cartas reais. Ele conecta a lógica de cartas do Foundry (sacar para uma pilha de descarte, encontrar uma carta entre as pilhas) ao visualizador, então sua macro ou módulo pode mover cartas **e** mostrar a carta animada em um único passo — sem precisar reimplementar a estrutura de baralhos/pilhas você mesmo.
+- 🃏 **`EpicCards.Dealer(...)`** — um auxiliar opcional para quando você está trabalhando com baralhos de cartas reais. Ele conecta a lógica de cartas do Foundry (sacar para uma pilha de descarte, encontrar uma carta entre as pilhas) ao visualizador, então sua macro ou módulo pode mover cartas **e** mostrar a carta animada em um único passo — sem precisar reimplementar a estrutura de baralhos/pilhas você mesmo. Seus métodos `draw` e `view` retornam os dados das cartas que mostraram (incluindo o `uuid` de cada uma e se ela saiu invertida), então outro módulo pode pegar essas mesmas cartas e agir sobre elas. Veja [a referência da API](API.md#card-data).
 
 Prefere não escrever código? Abra o **Construtor de Macros** (configurações do módulo → **Abrir Construtor de Macros**, ou chame `EpicCards.MacroBuilder()`) para gerar uma macro pronta a partir de um formulário.
 

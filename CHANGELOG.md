@@ -1,3 +1,9 @@
+# 0.0.8
+
+- `Dealer.draw` and `Dealer.view` now **return the data of the cards they showed**, so another module can pick the same cards up and act on them. Each entry carries `id`, `uuid`, `name`, `front`, `back`, `desc` and `reversed` — `reversed` being the Tarot-style orientation, which is rolled at display time and stored nowhere on the Card, so the return value is the only way to read it. This makes integrations like **Complete Card Management** possible: draw and reveal with this module, then place the same cards on the scene the right way up. Both methods resolve to `null` when nothing could be drawn or resolved, and the promise settles once the cards are drawn and the viewer has been launched — not when the reveal animation ends. Existing macros are unaffected: they call the API as a statement and never read the result. See [the API reference](docs/API.md#card-data).
+- Fixed `Dealer` hanging forever when it was given a deck name that doesn't exist (or none at all): the internal init promise was never settled, so anything awaiting `draw()` waited indefinitely. It now warns as before and resolves to `null`, and no longer leaves a stray discard pile behind.
+- https://github.com/brunocalado/epic-3d-card-reveal/issues/3
+
 # 0.0.6
 
 - Unified the look of the three config windows — **Macro Builder**, **Card Appearance** and **Reveal Sound** now share the same boxed-card styling for consistency. The boxed setting cards (and the Macro Builder *Options* tab's macro-type sections) use a near-black (`#0a0a0b`) fill, darker than the window frame, so each control and its hint stand out clearly. All three windows are also fully opaque now.

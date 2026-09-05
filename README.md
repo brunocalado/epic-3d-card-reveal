@@ -79,7 +79,7 @@ Not a coder? Click **Open Macro Builder** to fill in a simple form and get a rea
 Want to show any image as a gorgeous 3D card from a macro, or build on top of the viewer? The viewer is scriptable through the `EpicCards` global.
 
 - 🖼️ **`EpicCards.Display(...)`** — the core feature: render *any* image with the animated 3D presentation.
-- 🃏 **`EpicCards.Dealer(...)`** — an optional helper for when you're working with real card decks. It ties Foundry's card logic (drawing into a discard pile, finding a card across stacks) to the viewer, so your macro or module can move cards **and** show the animated card in one step — no need to reimplement the deck/pile plumbing yourself.
+- 🃏 **`EpicCards.Dealer(...)`** — an optional helper for when you're working with real card decks. It ties Foundry's card logic (drawing into a discard pile, finding a card across stacks) to the viewer, so your macro or module can move cards **and** show the animated card in one step — no need to reimplement the deck/pile plumbing yourself. Its `draw` and `view` methods resolve to the data of the cards they showed (including each card's `uuid` and whether it came out reversed), so another module can pick up the same cards and act on them. See [the API reference](docs/API.md#card-data).
 
 Prefer not to write code? Open the **Macro Builder** (module settings → **Open Macro Builder**, or call `EpicCards.MacroBuilder()`) to generate a finished macro from a form.
 

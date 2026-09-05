@@ -70,7 +70,7 @@ Every entry point accepts an optional `reversalChance` (`0`–`100`): the percen
 
 - **Off by default.** `reversalChance` defaults to `0`, so nothing is reversed unless you ask for it. `50` gives each card a coin-flip; `100` reverses every card.
 - **Per card.** With multiple cards, each one rolls independently.
-- **Re-rolled on every display.** The orientation is **not** stored on the card — drawing or viewing the same card again rolls afresh.
+- **Re-rolled on every display.** The orientation is **not** stored on the card — drawing or viewing the same card again rolls afresh. Because it lives nowhere on the Card document, the only way to read it from outside is the `reversed` field on what [`Dealer.draw`](#drawoptions) / [`Dealer.view`](#viewcards-facedown-dramaticreveal-share-options) return. Anything you persist from it (a rotation on a scene card, say) is your own copy and won't follow a later re-roll.
 - **Text is never changed.** Only the *visual* is flipped; the card's chat description is posted exactly as written, matching real Tarot practice where the reversed meaning is inferred by the reader. The chat thumbnail mirrors the orientation and is tagged **"Reversed"**.
 - **Consistent across the table and on re-open.** The roll happens once on the client that triggers the display, so every player who is shown the card sees the same orientation. The orientation is stored on the chat message, so clicking the thumbnail re-opens the card the same way up it was published.
 - The macro builder exposes this as a **Reversed chance** slider (Appearance tab); leaving it at `0` bakes nothing into the generated macro.
@@ -152,6 +152,8 @@ Draws random cards from the deck into the discard pile, displays them in the vie
 | `sendToChat` | `boolean` (optional) | Post a clickable chat message that re-opens each card. Omit to use the world default. |
 | `showDescription` | `boolean` (optional) | Include the card's description in the chat message. Omit to use the world default ([Card descriptions](#card-descriptions)). |
 
+**Returns** `Promise<Array<CardData>|null>` — the [card data](#card-data) of every card drawn, or `null` if nothing was drawn (empty deck, unknown deck, or a draw failure — each already warns the user).
+
 #### `.view(cards, faceDown, dramaticReveal, share, options)`
 Displays one or more **existing** cards (no draw side effect) and posts the chat preview once the cards are revealed (see [`sendToChat`](#sendtochat) for the timing of face-down/dramatic views).
 
@@ -162,6 +164,41 @@ Displays one or more **existing** cards (no draw side effect) and posts the chat
 | `dramaticReveal` | `boolean` | Render face-down, then auto-flip after the configured delay; the card cannot be clicked open early. |
 | `share` | `boolean` | Broadcast the view to all clients. |
 | `options` | `object` (optional) | `{ sendToChat, showDescription }` — post a clickable chat message that re-opens each card, and whether that message includes the card's description. Omit either to use its world default. |
+
+**Returns** `Promise<Array<CardData>|null>` — the [card data](#card-data) of every card shown, or `null` if none of the given IDs/names resolved. Cards that aren't found are warned about individually and left out of the array.
+
+### Card data
+
+Both `.draw()` and `.view()` resolve to an array with one entry per card:
+
+| Field | Type | Description |
+|---|---|---|
+| `id` | `string` | The Card document's id **in the stack it currently sits in**. After a draw that's the discard pile, not the deck. |
+| `uuid` | `string` | The Card's full UUID. Use `fromUuid(uuid)` to get the document back wherever it ended up — this is the field to hand to other modules. |
+| `name` | `string` | The card's face name. |
+| `front` | `string` | Face image path. |
+| `back` | `string` | Back image path, as stored on the card. Empty when the card has none; the viewer substitutes the configured default back, but that substitution is **not** reflected here. |
+| `desc` | `string` | The Card document's own description, raw (not enriched). See [Card descriptions](#card-descriptions). |
+| `reversed` | `boolean` | Whether this card was shown upside-down. See [Reversed cards](#reversed-cards-tarot-style). |
+
+**When it resolves.** The promise settles once the cards have been drawn (or resolved) and the viewer has been *launched* — **not** when the reveal animation ends. Waiting for the flip isn't necessary: `reversed` is rolled before the viewer opens, so the data is already final. A face-down or dramatic-reveal card will still be mid-reveal when you get the array.
+
+The entries are copies, so you can mutate them freely without touching the open viewer.
+
+### Example: integrating with another module
+
+Draw, reveal, and then place the same cards elsewhere with the orientation the table just saw:
+
+```js
+const drawn = await EpicCards.Dealer({ deckName: 'Tarot', reversalChance: 50 })
+    .draw({ quantity: 3, share: true });
+
+for (const c of drawn ?? []) {
+    const card = await fromUuid(c.uuid);
+    const rotation = c.reversed ? 180 : 0;
+    // ...hand `card` and `rotation` to whatever places it (a scene card layer, a custom sheet, ...).
+}
+```
 
 ### Example
 ```js

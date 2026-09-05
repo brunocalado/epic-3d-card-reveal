@@ -61,27 +61,34 @@ export default class CardDealer {
 
     /**
      * Resolve the deck (and optional pile) Documents by name.
-     * Resolves the {@link initPromise} when finished so the public methods can proceed.
+     * Always resolves the {@link initPromise} when finished — including on failure — so the public
+     * methods can proceed. Failure is reported by the warnings below and detected downstream by a
+     * missing {@link deck}.
      * @param {string} deckName
      * @param {string} [discardPileName]
      */
     async _initialize(deckName, discardPileName) {
-        if (!deckName) {
-            ui.notifications.warn("Deck name not provided.");
-            return;
+        try {
+            if (!deckName) {
+                ui.notifications.warn("Deck name not provided.");
+                return;
+            }
+
+            this.deckName = deckName;
+            const deck = game.cards.getName(deckName);
+            if (!deck) {
+                ui.notifications.warn("No deck by that name was found.");
+                return;
+            }
+
+            this.deck = deck;
+            if (discardPileName) this.pile = await this._getDiscardPile(discardPileName);
+        } finally {
+            // Settle unconditionally. draw() awaits this promise, so leaving it pending on a bad
+            // deck name used to hang the caller forever — invisible while nothing awaited draw(),
+            // but a trap now that it returns the drawn cards and callers are meant to await it.
+            this._initPromiseResolve();
         }
-
-        this.deckName = deckName;
-        const deck = game.cards.getName(deckName);
-        if (!deck) {
-            ui.notifications.warn("No deck by that name was found.");
-            return;
-        }
-
-        this.deck = deck;
-        if (discardPileName) this.pile = await this._getDiscardPile(discardPileName);
-
-        this._initPromiseResolve();
     }
 
     /**
@@ -94,11 +101,20 @@ export default class CardDealer {
      *                                           Omit to follow the world default.
      * @param {boolean} [options.showDescription]  Whether the chat message includes the card's description.
      *                                             Omit to follow the world default.
+     * @returns {Promise<Array<object>|null>}    The data of the cards that were drawn and shown — one entry
+     *   per card, as produced by {@link _extractCardProperties} — or `null` if nothing was drawn. Exposed so
+     *   another module can act on the same cards (e.g. place them on the scene with the orientation the table
+     *   just saw): `reversed` is rolled here and never persisted on the Card, so this is the only way to read
+     *   it. Resolves once the cards are drawn and the viewer has been launched, NOT when the reveal animation
+     *   finishes — the roll is already final by then. The entries are copies; mutating them affects nothing.
      */
     async draw({ quantity = 1, share = true, face, sendToChat, showDescription } = {}) {
         let deckName, deck, pile;
         try {
             await this.initPromise;
+            // _initialize already warned (no deck name, or no deck by that name). Bail before
+            // touching the pile so a dud dealer never creates a stray discard pile.
+            if (!this.deck) return null;
             deckName = this.deckName;
             deck = this.deck;
             // Auto-create a discard pile if none was provided / found during init.
@@ -106,7 +122,7 @@ export default class CardDealer {
             pile = this.pile;
         } catch (error) {
             console.error(`${MODULE_ID} | Error rendering CardDealer.draw().`, error);
-            return;
+            return null;
         }
 
         // Expected, user-facing condition: the deck has run dry (all cards drawn). Foundry's
@@ -177,8 +193,14 @@ export default class CardDealer {
             // Face-up posts now; a dramatic reveal holds the preview until the cards auto-flip. A
             // manual face-down reveal is handled by onReveal above instead.
             if (post && !manualReveal) postChatAfterReveal(dramaticReveal, this.revealDelay, postPreviews);
+
+            // Hand back copies, never the live array: FancyDisplay#render mutates these entries to
+            // fill in a missing `back` with the world default, so the original would change under
+            // the caller after this method has already resolved.
+            return drawnArray.map(c => ({ ...c }));
         } catch (error) {
             console.error(`${MODULE_ID} | Error rendering CardDealer.draw().`, error);
+            return null;
         }
     }
 
@@ -197,6 +219,9 @@ export default class CardDealer {
      *                                                re-opens each card. Omit to follow the world default.
      * @param {boolean} [options.showDescription]     Whether the chat message includes the card's
      *                                                description. Omit to follow the world default.
+     * @returns {Promise<Array<object>|null>}  The data of the cards that were shown — one entry per resolved
+     *   card, as produced by {@link _extractCardProperties} — or `null` if none could be resolved. Cards that
+     *   were not found are warned about and left out. See {@link draw} for the timing and copy semantics.
      */
     async view(cards, faceDown, dramaticReveal, share, { suppressChat = false, sendToChat, showDescription } = {}) {
         try {
@@ -205,7 +230,7 @@ export default class CardDealer {
 
             if (!cardsArray.length) {
                 ui.notifications.warn("Please provide a card name or ID.");
-                return;
+                return null;
             }
 
             const cardDataArray = [];
@@ -217,7 +242,7 @@ export default class CardDealer {
                 }
                 cardDataArray.push(this._extractCardProperties(cardToView));
             }
-            if (!cardDataArray.length) return;
+            if (!cardDataArray.length) return null;
             const post = resolveSendToChat(sendToChat);
             const showDesc = resolveShowDescription(showDescription);
             // A face-down view with no dramatic auto-reveal waits for a manual flip in the viewer.
@@ -249,8 +274,12 @@ export default class CardDealer {
             // Face-up posts now; a dramatic reveal holds the preview until the cards auto-flip. A
             // manual face-down reveal is handled by onReveal above instead.
             if (post && !suppressChat && !manualReveal) postChatAfterReveal(dramaticReveal, this.revealDelay, postPreviews);
+
+            // Copies, for the same reason as draw(): the live array is mutated by FancyDisplay#render.
+            return cardDataArray.map(c => ({ ...c }));
         } catch (error) {
             console.error(`${MODULE_ID} | Error rendering CardDealer.view().`, error);
+            return null;
         }
     }
 
@@ -327,11 +356,15 @@ export default class CardDealer {
      * Pull the displayable properties from a Card document. The `reversed` flag is rolled here, so it
      * is re-rolled on every draw/view (never persisted), matching the "re-roll each display" behavior.
      * @param {Card} card
-     * @returns {{id:string, name:string, front:string, back:string, desc:string, faceDown:boolean, reversed:boolean}}
+     * @returns {{id:string, uuid:string, name:string, front:string, back:string, desc:string, reversed:boolean}}
      */
     _extractCardProperties(card) {
         return {
             id: card.id,
+            // A drawn card lives in the discard pile, so its id alone is only meaningful together
+            // with the stack. The uuid lets an API consumer resolve the Card with fromUuid()
+            // wherever it ended up — this is what makes the draw()/view() return value actionable.
+            uuid: card.uuid,
             name: card.faces[0].name,
             front: card.faces[0].img,
             back: card.back.img,
@@ -339,7 +372,6 @@ export default class CardDealer {
             // lore), not the per-face text. Only posted to chat when the SHOW_DESCRIPTION setting
             // is on; gated and enriched in postCardToChat.
             desc: card.description,
-            faceDown: true,
             reversed: Math.random() * 100 < (this.reversalChance ?? 0)
         };
     }
