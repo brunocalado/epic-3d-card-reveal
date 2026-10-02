@@ -1,3 +1,10 @@
+# 0.0.9
+
+- https://github.com/brunocalado/epic-3d-card-reveal/issues/4
+- Fixed **duplicate discard piles**: a draw macro with no discard pile set (the Macro Builder's default) created a new `"<deck> - Discard Pile"` every time it ran. The pile the module creates is now linked to its deck and reused on every later draw — renaming the deck or the pile keeps the link, two decks never share a pile, and deleting the pile simply makes the next draw create a fresh one. Piles left over from earlier versions aren't linked, so the first draw after updating creates one new pile; the old ones can be deleted.
+- `Dealer` no longer guesses a discard pile from pile names. To draw into a pile of your own, pass its name as `discardPileName` (or pick it in the Macro Builder); it's created if it doesn't exist.
+- The module now installs and updates from **GitHub releases**. New manifest URL: `https://github.com/brunocalado/epic-3d-card-reveal/releases/latest/download/module.json`.
+
 # 0.0.8
 
 - `Dealer.draw` and `Dealer.view` now **return the data of the cards they showed**, so another module can pick the same cards up and act on them. Each entry carries `id`, `uuid`, `name`, `front`, `back`, `desc` and `reversed` — `reversed` being the Tarot-style orientation, which is rolled at display time and stored nowhere on the Card, so the return value is the only way to read it. This makes integrations like **Complete Card Management** possible: draw and reveal with this module, then place the same cards on the scene the right way up. Both methods resolve to `null` when nothing could be drawn or resolved, and the promise settles once the cards are drawn and the viewer has been launched — not when the reveal animation ends. Existing macros are unaffected: they call the API as a statement and never read the result. See [the API reference](docs/API.md#card-data).
