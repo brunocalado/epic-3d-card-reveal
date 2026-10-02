@@ -96,7 +96,7 @@ Veja **[docs/API.md](API.md)** para a referência completa e exemplos de macros 
 3. Cole a URL do manifesto abaixo e clique em **Install**.
 
 ```
-https://raw.githubusercontent.com/brunocalado/epic-3d-card-reveal/main/module.json
+https://github.com/brunocalado/epic-3d-card-reveal/releases/latest/download/module.json
 ```
 
 4. Ative o módulo no seu mundo através de **Manage Modules**.

@@ -94,7 +94,7 @@ See **[docs/API.md](docs/API.md)** for the full reference and ready-to-paste mac
 3. Paste the manifest URL below and click **Install**.
 
 ```
-https://raw.githubusercontent.com/brunocalado/epic-3d-card-reveal/main/module.json
+https://github.com/brunocalado/epic-3d-card-reveal/releases/latest/download/module.json
 ```
 
 4. Enable the module in your world via **Manage Modules**.
