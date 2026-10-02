@@ -1,3 +1,11 @@
+/*!
+ * Epic 3D Card Reveal
+ * 2026 https://github.com/brunocalado
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3.
+ */
+
 import { MODULE_ID, MACRO_FOLDER_NAME, SETTINGS, DEFAULT_MACRO_ICON, SOUND_CHANNELS } from "./constants.js";
 
 const fields = foundry.data.fields;

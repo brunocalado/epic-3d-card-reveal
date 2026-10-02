@@ -1,3 +1,11 @@
+/*!
+ * Epic 3D Card Reveal
+ * 2026 https://github.com/brunocalado
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3.
+ */
+
 /**
  * String identifier for the module used throughout other scripts.
  * Single source of truth: matches the `id` field in module.json verbatim.

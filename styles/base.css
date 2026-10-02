@@ -1,3 +1,11 @@
+/*!
+ * Epic 3D Card Reveal
+ * 2026 https://github.com/brunocalado
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3.
+ */
+
 /*
  * CardsConfig sheets: `_registerCardImgClickInDeck` (scripts/hooks.js) marks the
  * sheet root with `data-dcv-card-click-bound` when — and only when — the module's
