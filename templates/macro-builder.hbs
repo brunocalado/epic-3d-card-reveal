@@ -85,13 +85,13 @@
                 <label>Discard pile</label>
                 <div class="form-fields">
                     <select name="drawDiscardPile">
-                        <option value="">Auto-detect / create</option>
+                        <option value="">Automatic (the deck's own pile)</option>
                         {{#each piles as |p|}}
                         <option value="{{p.name}}">{{p.name}}</option>
                         {{/each}}
                     </select>
                 </div>
-                <p class="hint">Where the drawn card goes. Leave on auto to detect an existing pile or create one.</p>
+                <p class="hint">Where the drawn card goes. Leave on automatic to use a pile linked to the deck, created on the first draw.</p>
             </div>
             {{formGroup fields.quantity value=data.quantity}}
         </fieldset>

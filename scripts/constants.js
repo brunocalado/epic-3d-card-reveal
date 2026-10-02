@@ -19,6 +19,15 @@ export const SETTINGS = {
 };
 
 /**
+ * Document flag keys stored under the module namespace.
+ * SOURCE_DECK: set on a discard pile the dealer auto-created, holding the id of the deck it belongs
+ * to. Lets a later draw find that pile again without matching names.
+ */
+export const FLAGS = {
+    SOURCE_DECK: "sourceDeck"
+};
+
+/**
  * Valid audio channels a reveal sound can play through, in display order. Mirror of the keys of
  * core's `CONST.AUDIO_CHANNELS` (interface / music / environment) — kept here so the value list is
  * a dependency-free constant. Human-readable labels are resolved at runtime from

@@ -127,7 +127,7 @@ Construct a dealer bound to a named deck (and, optionally, a named discard pile)
 | Option | Type | Description |
 |---|---|---|
 | `deckName` | `string` | Name of the source `Cards` deck. |
-| `discardPileName` | `string` (optional) | Name of the discard pile to draw into. If omitted, the dealer smart-matches an existing pile by name, or auto-creates `"<deckName> - Discard Pile"` on the first draw. |
+| `discardPileName` | `string` (optional) | Name of the discard pile to draw into. Created by that name if it doesn't exist. If omitted, the dealer uses the deck's own pile: it creates `"<deckName> - Discard Pile"` on the first draw, links it to the deck with a flag, and reuses it on every later draw — renaming the deck or the pile keeps the link. |
 | `glowColor` | `string` (optional) | Glow color (hue) for every card this dealer shows. Omit to use the world default. |
 | `glowIntensity` | `number` (optional) | Glow strength (`0`–`1`) for every card this dealer shows; `0` turns the glow off. Omit to use the world default. |
 | `sound` | `string` (optional) | Reveal-sound override applied to every card this dealer shows. A path plays that sound; `""` forces no sound; omit to use the world default. See [Reveal sound](#reveal-sound). |
@@ -260,7 +260,7 @@ Use `Dealer` when you also want the draw recorded in Foundry — the card moves 
 
 ```js
 const deckName = 'Deck of Many Things'; // a Cards deck in your world
-const discardPileName = undefined;      // optional; smart-matched or auto-created
+const discardPileName = undefined;      // optional; omit to use the deck's own pile
 const quantity = 1;                     // optional
 const share = true;                     // optional
 

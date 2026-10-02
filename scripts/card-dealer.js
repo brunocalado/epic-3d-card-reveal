@@ -1,11 +1,11 @@
-import { MODULE_ID } from "./constants.js";
+import { FLAGS, MODULE_ID } from "./constants.js";
 import { postCardToChat, postChatAfterReveal, resolveSendToChat, resolveShowDescription } from "./helpers.js";
 import FancyDisplay from "./fancy-display.js";
 
 /**
  * Coordinates drawing cards from a deck into a discard pile and rendering them
- * through {@link FancyDisplay}. Initialization is async (it looks up the deck and
- * pile Documents); the public methods all await the same init promise.
+ * through {@link FancyDisplay}. The deck and pile Documents are looked up by {@link draw} itself, on
+ * every call, so a dealer never holds a stale or half-initialized reference.
  *
  * This is the optional "card logic" assistant on top of the primary {@link FancyDisplay}
  * viewer: macros/modules that want to mutate card state (draw into a discard pile, move
@@ -16,7 +16,8 @@ export default class CardDealer {
     /**
      * @param {object} opts
      * @param {string} opts.deckName             Name of the source `Cards` deck.
-     * @param {string} [opts.discardPileName]    Optional name of the discard pile to use; if absent, smart-detect or auto-create.
+     * @param {string} [opts.discardPileName]    Optional name of the discard pile to use (created if missing); if absent,
+     *                                           the deck's own auto-created pile is used.
      * @param {string} [opts.glowColor]          Optional viewer glow color (hue) override.
      * @param {number} [opts.glowIntensity]      Optional viewer glow strength (0..1) override; 0 turns the glow off.
      * @param {string} [opts.sound]              Optional reveal-sound override: a path plays that sound, `""` forces
@@ -29,9 +30,8 @@ export default class CardDealer {
      *                                           (Tarot-style). 0 / omitted disables it. Re-rolled per display.
      */
     constructor({ deckName, discardPileName, glowColor = null, glowIntensity, sound, soundVolume, soundChannel, revealDelay, reversalChance = 0 } = {}) {
-        this.deckName = null;
-        this.deck = null;
-        this.pile = null;
+        this.deckName = deckName;
+        this.discardPileName = discardPileName;
 
         // Optional viewer glow overrides forwarded to FancyDisplay on draw()/view().
         // When left null/undefined, FancyDisplay falls back to the global card-appearance default.
@@ -51,44 +51,6 @@ export default class CardDealer {
         // Optional Tarot-style "reversed" chance (0..100). Each card displayed by this dealer rolls
         // independently against it; the orientation is re-rolled per display (never persisted).
         this.reversalChance = reversalChance;
-
-        this.initPromise = new Promise((resolve) => { this._initPromiseResolve = resolve; });
-
-        this._initialize(deckName, discardPileName).catch((error) => {
-            console.error(`${MODULE_ID} | Error initializing CardDealer.`, error);
-        });
-    }
-
-    /**
-     * Resolve the deck (and optional pile) Documents by name.
-     * Always resolves the {@link initPromise} when finished — including on failure — so the public
-     * methods can proceed. Failure is reported by the warnings below and detected downstream by a
-     * missing {@link deck}.
-     * @param {string} deckName
-     * @param {string} [discardPileName]
-     */
-    async _initialize(deckName, discardPileName) {
-        try {
-            if (!deckName) {
-                ui.notifications.warn("Deck name not provided.");
-                return;
-            }
-
-            this.deckName = deckName;
-            const deck = game.cards.getName(deckName);
-            if (!deck) {
-                ui.notifications.warn("No deck by that name was found.");
-                return;
-            }
-
-            this.deck = deck;
-            if (discardPileName) this.pile = await this._getDiscardPile(discardPileName);
-        } finally {
-            // Settle unconditionally. draw() awaits this promise, so leaving it pending on a bad
-            // deck name used to hang the caller forever — invisible while nothing awaited draw(),
-            // but a trap now that it returns the drawn cards and callers are meant to await it.
-            this._initPromiseResolve();
-        }
     }
 
     /**
@@ -109,17 +71,20 @@ export default class CardDealer {
      *   finishes — the roll is already final by then. The entries are copies; mutating them affects nothing.
      */
     async draw({ quantity = 1, share = true, face, sendToChat, showDescription } = {}) {
-        let deckName, deck, pile;
+        const { deckName } = this;
+        let deck, pile;
         try {
-            await this.initPromise;
-            // _initialize already warned (no deck name, or no deck by that name). Bail before
-            // touching the pile so a dud dealer never creates a stray discard pile.
-            if (!this.deck) return null;
-            deckName = this.deckName;
-            deck = this.deck;
-            // Auto-create a discard pile if none was provided / found during init.
-            if (!this.pile) this.pile = await this._createNewDiscardPile();
-            pile = this.pile;
+            if (!deckName) {
+                ui.notifications.warn("Deck name not provided.");
+                return null;
+            }
+            deck = game.cards.getName(deckName);
+            // Bail before touching the pile so a dud dealer never creates a stray discard pile.
+            if (!deck) {
+                ui.notifications.warn(`No deck named "${deckName}" was found.`);
+                return null;
+            }
+            pile = await this._resolveDiscardPile(deck);
         } catch (error) {
             console.error(`${MODULE_ID} | Error rendering CardDealer.draw().`, error);
             return null;
@@ -296,60 +261,29 @@ export default class CardDealer {
     }
 
     /**
-     * Resolve a discard pile by name, smart-matching against existing piles or creating a new one if missing.
-     * @param {string} [discardPileName]
-     * @returns {Promise<Cards|null>}
-     */
-    async _getDiscardPile(discardPileName) {
-        if (!discardPileName) {
-            const matchedPileName = this._smartMatchDiscardName(this.deckName);
-            const pile = matchedPileName ? game.cards.getName(matchedPileName) : null;
-            if (pile) ui.notifications.info(`No discard pile name provided. Found a discard pile named "${matchedPileName}", which will be used.`);
-            return pile;
-        }
-
-        let pile = game.cards.getName(discardPileName);
-        if (!pile) {
-            ui.notifications.info(`No pile found by the name "${discardPileName}". Creating a new discard pile by that name.`);
-            const CardsCls = foundry.utils.getDocumentClass("Cards");
-            pile = await CardsCls.create({ name: discardPileName, type: "pile" });
-        }
-        return pile;
-    }
-
-    /**
-     * Create a fresh discard pile derived from the deck name.
-     * @param {string} [discardPileName]
+     * Find the pile this dealer draws into, creating it if it doesn't exist yet.
+     * A named pile is matched by name. Without a name, the pile is the one this module created for
+     * `deck`, found by the flag that links it to the deck — never by name, so renaming either stack
+     * keeps the link and two decks can never end up sharing a pile.
+     * @param {Cards} deck
      * @returns {Promise<Cards>}
      */
-    async _createNewDiscardPile(discardPileName) {
-        const newPileName = discardPileName || `${this.deckName} - Discard Pile`;
-        if (this.pile) return this.pile;
+    async _resolveDiscardPile(deck) {
         const CardsCls = foundry.utils.getDocumentClass("Cards");
-        return CardsCls.create({ name: newPileName, type: "pile" });
-    }
-
-    /**
-     * Smart-match a discard pile to a deck name by stripping common stopwords and looking for
-     * pile-like keywords.
-     * @param {string} name  Deck name to match against.
-     * @returns {string|null}
-     */
-    _smartMatchDiscardName(name) {
-        const stopwords = ["the", "thy", "a", "an", "in", "on", "of", "for", "de", "le", "la", "el", "los", "las", "deck", "cards", "card"];
-        const matchwordsOr = ["discard", "drawn", "played", "used"];
-
-        const namePattern = new RegExp(name.replace(new RegExp(`\\b(?:${stopwords.join("|")})\\b\\s*`, "gi"), ""), "i");
-        const discardPattern = new RegExp(`(?:${matchwordsOr.join("|")})`, "i");
-        const fallbackPattern = /Discard(?:\s+Pile)?/i;
-
-        for (const [, deck] of game.cards.entries()) {
-            if ((namePattern.test(deck.name) && discardPattern.test(deck.name)) || fallbackPattern.test(deck.name)) {
-                console.debug(`${MODULE_ID} | Discard Pile found for deck "${name}": ${deck.name}`);
-                return deck.name;
-            }
+        if (this.discardPileName) {
+            const pile = game.cards.getName(this.discardPileName);
+            if (pile) return pile;
+            ui.notifications.info(`No pile found by the name "${this.discardPileName}". Creating a new discard pile by that name.`);
+            return CardsCls.create({ name: this.discardPileName, type: "pile" });
         }
-        return null;
+
+        const pile = game.cards.find(c => c.type === "pile" && c.getFlag(MODULE_ID, FLAGS.SOURCE_DECK) === deck.id);
+        if (pile) return pile;
+        return CardsCls.create({
+            name: `${deck.name} - Discard Pile`,
+            type: "pile",
+            flags: { [MODULE_ID]: { [FLAGS.SOURCE_DECK]: deck.id } }
+        });
     }
 
     /**

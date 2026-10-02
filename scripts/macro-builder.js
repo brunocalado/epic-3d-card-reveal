@@ -284,7 +284,7 @@ const ARG_COMMENTS = {
     sendToChat: "Also post a clickable chat message that re-opens the card.",
     // Dealer config
     deckName: "Name of the source Cards deck.",
-    discardPileName: "Discard pile to draw into (auto-matched/created when omitted).",
+    discardPileName: "Discard pile to draw into. Omit to use the deck's own pile, created on the first draw.",
     // Draw options
     quantity: "How many cards to draw.",
     face: "Initial face: \"up\", \"down\", or \"reveal\" (dramatic auto-flip).",
