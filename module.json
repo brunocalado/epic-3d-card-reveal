@@ -39,8 +39,8 @@
   ],
   "socket": true,
   "url": "https://github.com/brunocalado/epic-3d-card-reveal",
-  "manifest": "https://raw.githubusercontent.com/brunocalado/epic-3d-card-reveal/main/module.json",
-  "download": "https://codeload.github.com/brunocalado/epic-3d-card-reveal/zip/main",
+  "manifest": "https://github.com/brunocalado/epic-3d-card-reveal/releases/latest/download/module.json",
+  "download": "https://github.com/brunocalado/epic-3d-card-reveal/releases/download/0.0.8/module.zip",
   "description": "",
   "flags": {}
 }
