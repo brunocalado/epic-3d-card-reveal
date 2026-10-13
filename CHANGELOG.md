@@ -1,3 +1,8 @@
+# 0.0.10
+
+- https://github.com/brunocalado/epic-3d-card-reveal/issues/5
+- Fixed the first draw into a new discard pile failing for **players**: the pile was created with the drawing player's permissions, but players lack the permission to create card stacks by default. The active GM's client now creates the pile on the player's behalf; if no GM is connected, the draw warns and stops instead of failing silently.
+
 # 0.0.9
 
 - https://github.com/brunocalado/epic-3d-card-reveal/issues/4
