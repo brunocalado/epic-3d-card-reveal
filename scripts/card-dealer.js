@@ -11,6 +11,14 @@ import { postCardToChat, postChatAfterReveal, resolveSendToChat, resolveShowDesc
 import FancyDisplay from "./fancy-display.js";
 
 /**
+ * Pile creations still in flight on this client, keyed by what {@link CardDealer#_findPile} matches on.
+ * Two draws from a fresh deck (two players querying the GM at once, or the GM drawing twice) would
+ * otherwise both miss the pile and each create one.
+ * @type {Map<string, Promise<Cards>>}
+ */
+const pendingPiles = new Map();
+
+/**
  * Coordinates drawing cards from a deck into a discard pile and rendering them
  * through {@link FancyDisplay}. The deck and pile Documents are looked up by {@link draw} itself, on
  * every call, so a dealer never holds a stale or half-initialized reference.
@@ -21,6 +29,26 @@ import FancyDisplay from "./fancy-display.js";
  * of wiring the Cards API themselves.
  */
 export default class CardDealer {
+    /** Query a player sends the active GM to create a discard pile the player has no permission to create. */
+    static CREATE_PILE_QUERY = `${MODULE_ID}.createDiscardPile`;
+
+    /**
+     * GM side of {@link CREATE_PILE_QUERY}. Registered on every client, not only GMs, because
+     * User#query refuses to send a query that the sender's own CONFIG.queries doesn't list.
+     * The payload comes from another user's client, so it is bounded to "a pile for an existing deck",
+     * which is no more than the player's own draw would create with the permission.
+     * @param {{deckId: string, pileName?: string}} payload
+     * @returns {Promise<{pileId: string}>}
+     */
+    static async onCreatePileQuery({ deckId, pileName } = {}) {
+        if (!game.user.isGM) throw new Error("Only a GM can create a discard pile for another user.");
+        const deck = game.cards.get(deckId);
+        if (deck?.type !== "deck") throw new Error(`No deck with id "${deckId}".`);
+        if (pileName !== undefined && (typeof pileName !== "string" || !pileName.trim())) throw new Error("Invalid pile name.");
+        const pile = await new CardDealer({ discardPileName: pileName })._findOrCreatePile(deck);
+        return { pileId: pile.id };
+    }
+
     /**
      * @param {object} opts
      * @param {string} opts.deckName             Name of the source `Cards` deck.
@@ -93,6 +121,8 @@ export default class CardDealer {
                 return null;
             }
             pile = await this._resolveDiscardPile(deck);
+            // Already told the user why (no GM connected to create it).
+            if (!pile) return null;
         } catch (error) {
             console.error(`${MODULE_ID} | Error rendering CardDealer.draw().`, error);
             return null;
@@ -270,23 +300,68 @@ export default class CardDealer {
 
     /**
      * Find the pile this dealer draws into, creating it if it doesn't exist yet.
-     * A named pile is matched by name. Without a name, the pile is the one this module created for
-     * `deck`, found by the flag that links it to the deck — never by name, so renaming either stack
-     * keeps the link and two decks can never end up sharing a pile.
+     * Creating a Cards stack needs CARDS_CREATE, which players lack by default, while the draw itself
+     * needs nothing extra. So a user without it asks the active GM to create the pile instead.
+     * @param {Cards} deck
+     * @returns {Promise<Cards|null>}  `null` (after a warning) when no GM is connected to create it.
+     */
+    async _resolveDiscardPile(deck) {
+        const existing = this._findPile(deck);
+        if (existing) return existing;
+        if (game.user.can("CARDS_CREATE")) return this._findOrCreatePile(deck);
+
+        const gm = game.users.activeGM;
+        if (!gm) {
+            ui.notifications.warn(`A GM must be connected to create the discard pile for "${deck.name}" the first time.`);
+            return null;
+        }
+        const { pileId } = await gm.query(CardDealer.CREATE_PILE_QUERY,
+            { deckId: deck.id, pileName: this.discardPileName || undefined }, { timeout: 10_000 });
+        // The GM's create has already reached this client by the time the query resolves.
+        return game.cards.get(pileId);
+    }
+
+    /**
+     * The pile this dealer draws into, if it exists. A named pile is matched by name. Without a name,
+     * the pile is the one this module created for `deck`, found by the flag that links it to the deck —
+     * never by name, so renaming either stack keeps the link and two decks can never end up sharing a pile.
+     * @param {Cards} deck
+     * @returns {Cards|undefined}
+     */
+    _findPile(deck) {
+        if (this.discardPileName) return game.cards.getName(this.discardPileName);
+        return game.cards.find(c => c.type === "pile" && c.getFlag(MODULE_ID, FLAGS.SOURCE_DECK) === deck.id);
+    }
+
+    /**
+     * Find the pile, or create it with this client's permissions. Concurrent calls for the same pile
+     * share one creation (see {@link pendingPiles}).
      * @param {Cards} deck
      * @returns {Promise<Cards>}
      */
-    async _resolveDiscardPile(deck) {
+    async _findOrCreatePile(deck) {
+        const existing = this._findPile(deck);
+        if (existing) return existing;
+        const key = this.discardPileName ? `name:${this.discardPileName}` : `deck:${deck.id}`;
+        let pending = pendingPiles.get(key);
+        if (!pending) {
+            pending = this._createPile(deck).finally(() => pendingPiles.delete(key));
+            pendingPiles.set(key, pending);
+        }
+        return pending;
+    }
+
+    /**
+     * Create the pile {@link _findPile} looks for.
+     * @param {Cards} deck
+     * @returns {Promise<Cards>}
+     */
+    async _createPile(deck) {
         const CardsCls = foundry.utils.getDocumentClass("Cards");
         if (this.discardPileName) {
-            const pile = game.cards.getName(this.discardPileName);
-            if (pile) return pile;
             ui.notifications.info(`No pile found by the name "${this.discardPileName}". Creating a new discard pile by that name.`);
             return CardsCls.create({ name: this.discardPileName, type: "pile" });
         }
-
-        const pile = game.cards.find(c => c.type === "pile" && c.getFlag(MODULE_ID, FLAGS.SOURCE_DECK) === deck.id);
-        if (pile) return pile;
         return CardsCls.create({
             name: `${deck.name} - Discard Pile`,
             type: "pile",

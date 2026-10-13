@@ -23,6 +23,7 @@ export default function registerHooks() {
     /* -------------------------- init -------------------------- */
     Hooks.once("init", async () => {
         registerSettings();
+        CONFIG.queries[CardDealer.CREATE_PILE_QUERY] = CardDealer.onCreatePileQuery;
         // Pre-compile the viewer template so the first render doesn't pay the parse cost.
         await foundry.applications.handlebars.loadTemplates([TEMPLATE]);
     });
