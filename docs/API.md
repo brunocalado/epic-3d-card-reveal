@@ -127,7 +127,7 @@ Construct a dealer bound to a named deck (and, optionally, a named discard pile)
 | Option | Type | Description |
 |---|---|---|
 | `deckName` | `string` | Name of the source `Cards` deck. |
-| `discardPileName` | `string` (optional) | Name of the discard pile to draw into. Created by that name if it doesn't exist. If omitted, the dealer uses the deck's own pile: it creates `"<deckName> - Discard Pile"` on the first draw, links it to the deck with a flag, and reuses it on every later draw — renaming the deck or the pile keeps the link. |
+| `discardPileName` | `string` (optional) | Name of the discard pile to draw into. Created by that name if it doesn't exist. If omitted, the dealer uses the deck's own pile: it creates `"<deckName> - Discard Pile"` on the first draw, links it to the deck with a flag, and reuses it on every later draw — renaming the deck or the pile keeps the link. For players, see [Who creates the discard pile](#who-creates-the-discard-pile). |
 | `glowColor` | `string` (optional) | Glow color (hue) for every card this dealer shows. Omit to use the world default. |
 | `glowIntensity` | `number` (optional) | Glow strength (`0`–`1`) for every card this dealer shows; `0` turns the glow off. Omit to use the world default. |
 | `sound` | `string` (optional) | Reveal-sound override applied to every card this dealer shows. A path plays that sound; `""` forces no sound; omit to use the world default. See [Reveal sound](#reveal-sound). |
@@ -136,7 +136,7 @@ Construct a dealer bound to a named deck (and, optionally, a named discard pile)
 | `revealDelay` | `number` (optional) | Dramatic-reveal delay in ms for every card this dealer shows, overriding the world default. Applies only to dramatic-reveal draws/views. |
 | `reversalChance` | `number` (optional) | `0`–`100` chance that each card this dealer shows is upside-down (Tarot-style). `0` (default) disables it; re-rolled per display. See [Reversed cards](#reversed-cards-tarot-style). |
 
-Initialization is asynchronous (it resolves the deck/pile Documents by name); every method below awaits that internally, so you can call them immediately after construction.
+The constructor looks nothing up. Each `.draw()` finds the deck and the pile by name when it runs, so you can call it immediately after construction, and a dealer never holds a stale reference.
 
 ### Returns
 A `CardDealer` instance with `.draw(options)` and `.view(cards, faceDown, dramaticReveal, share)` methods.
@@ -152,7 +152,16 @@ Draws random cards from the deck into the discard pile, displays them in the vie
 | `sendToChat` | `boolean` (optional) | Post a clickable chat message that re-opens each card. Omit to use the world default. |
 | `showDescription` | `boolean` (optional) | Include the card's description in the chat message. Omit to use the world default ([Card descriptions](#card-descriptions)). |
 
-**Returns** `Promise<Array<CardData>|null>` — the [card data](#card-data) of every card drawn, or `null` if nothing was drawn (empty deck, unknown deck, or a draw failure — each already warns the user).
+**Returns** `Promise<Array<CardData>|null>` — the [card data](#card-data) of every card drawn, or `null` if nothing was drawn (empty deck, unknown deck, no GM connected to create a player's pile, or a draw failure — each already warns the user).
+
+#### Who creates the discard pile
+
+Creating a card stack needs Foundry's **Create Card Stacks** permission, which players don't have by default. Drawing cards into a pile needs nothing extra. So when a user without that permission draws and the pile doesn't exist yet, the dealer asks the connected GM's client to create it, then draws as usual. The pile is the same one a GM's draw would create, with the same name and the same link to the deck.
+
+- If no GM is connected, the draw shows a warning and returns `null`. Once the pile exists, players can draw without a GM online.
+- GMs, Assistants, and any role you've granted the permission create the pile themselves.
+- The pile keeps Foundry's default ownership, so players can draw into it without being able to open it.
+- When the GM creates a named pile for a player, the "Creating a new discard pile by that name" notice shows on the GM's screen, not the player's.
 
 #### `.view(cards, faceDown, dramaticReveal, share, options)`
 Displays one or more **existing** cards (no draw side effect) and posts the chat preview once the cards are revealed (see [`sendToChat`](#sendtochat) for the timing of face-down/dramatic views).
